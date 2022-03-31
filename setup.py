@@ -17,7 +17,7 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
     ],
-    description="A Girder plugin for import tracking in HistomicsUI",
+    description="A Girder plugin for data import tracking in HistomicsUI",
     install_requires=requirements,
     license="Apache Software License 2.0",
     long_description=readme,
