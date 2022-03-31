@@ -12,7 +12,6 @@ class AssetstoreImport(Model):
         self.name = "assetstoreImport"
 
     def validate(self, doc):
-        # fields = {"name", "started", "completed", "assetstoreId", "params"}
         fields = {"name", "started", "assetstoreId", "params"}
         missing_keys = doc.keys() - fields
         if missing_keys:
@@ -26,11 +25,7 @@ class AssetstoreImport(Model):
             {
                 "name": now.isoformat(),
                 "started": now,
-                # "completed": None,
                 "assetstoreId": ObjectId(event.info["id"]),
                 "params": event.info["params"],
             }
         )
-
-    def finishAssetstoreImport(self, event: Event):
-        pass

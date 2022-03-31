@@ -15,8 +15,3 @@ class GirderPlugin(plugin.GirderPlugin):
             "create_assetstore_import",
             AssetstoreImport().createAssetstoreImport,
         )
-        events.bind(
-            "filesystem_assetstore_imported",
-            "finish_assetstore_import",
-            AssetstoreImport().finishAssetstoreImport,
-        )
