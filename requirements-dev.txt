@@ -1,0 +1,6 @@
+pip>=9
+tox
+virtualenv
+flake8
+black
+flake8-black
