@@ -4,6 +4,8 @@ from girder.api.describe import Description, autoDescribeRoute
 from girder.constants import SortDir
 from .models import AssetstoreImport
 
+from bson.objectid import ObjectId
+
 
 @access.admin
 @autoDescribeRoute(
@@ -13,7 +15,7 @@ from .models import AssetstoreImport
 )
 def listImports(id, limit, offset, sort):
     return AssetstoreImport().find(
-        assetstoreId=id,
+        {"assetstoreId": ObjectId(id)},
         limit=limit,
         offset=offset,
         sort=sort,
