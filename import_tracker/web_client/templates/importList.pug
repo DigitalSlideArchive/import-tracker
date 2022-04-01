@@ -1,0 +1,35 @@
+table.g-imports-list-table
+  thead
+    tr
+        th Actions
+        th Started
+        th Destination ID
+        th Destination Type
+        th Import Path
+        th Leafed Folders
+        th Progress
+        th File Include Regex
+        th File Exclude Regex
+  tbody
+    each _import, i in imports
+      tr
+        td
+          button(index=i).re-import-btn.btn.btn-sm.btn-success
+            i.icon-cw
+            |  Re-Import
+        td
+          span=_import.started
+        td
+          span=_import.params.destinationId
+        td
+          span=_import.params.destinationType
+        td
+          span=_import.params.importPath
+        td
+          span=_import.params.leafFoldersAsItems
+        td
+          span=_import.params.progress
+        td
+          span=_import.params.fileIncludeRegex
+        td
+          span=_import.params.fileExcludeRegex
