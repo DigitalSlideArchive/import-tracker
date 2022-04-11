@@ -9,13 +9,13 @@ class AssetstoreImport(Model):
     """A model that tracks assetstore import events."""
 
     def initialize(self):
-        self.name = "assetstoreImport"
+        self.name = 'assetstoreImport'
 
     def validate(self, doc):
-        fields = {"name", "started", "assetstoreId", "params"}
+        fields = {'name', 'started', 'assetstoreId', 'params'}
         missing_keys = doc.keys() - fields
         if missing_keys:
-            raise ValidationException("Fields missing.", ",".join(missing_keys))
+            raise ValidationException('Fields missing.', ','.join(missing_keys))
 
         return doc
 
@@ -23,9 +23,9 @@ class AssetstoreImport(Model):
         now = datetime.utcnow()
         return self.save(
             {
-                "name": now.isoformat(),
-                "started": now,
-                "assetstoreId": ObjectId(event.info["id"]),
-                "params": event.info["params"],
+                'name': now.isoformat(),
+                'started': now,
+                'assetstoreId': ObjectId(event.info['id']),
+                'params': event.info['params'],
             }
         )
