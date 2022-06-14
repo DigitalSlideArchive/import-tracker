@@ -31,29 +31,28 @@ var importList = View.extend({
 
     initialize:
         function ({ id }) {
-            if(id){
-            this.assetstoreId = id;
-            this.imports = [];
-            restRequest({
-                url: `assetstore/${id}/imports`,
-                method: 'GET'
-            }).done((result) => {
-                this.imports = result;
-                this.render();
-            });
-        }else{
-            this.imports = [];
-            restRequest({
-                url: `assetstore/all_imports`,
-                method: 'GET'
-            }).done((result) => {
-                this.imports = result;
-                this.render();
-            });
-        }
+            if (id) {
+                this.assetstoreId = id;
+                this.imports = [];
+                restRequest({
+                    url: `assetstore/${id}/imports`,
+                    method: 'GET'
+                }).done((result) => {
+                    this.imports = result;
+                    this.render();
+                });
+            } else {
+                this.imports = [];
+                restRequest({
+                    url: `assetstore/all_imports`,
+                    method: 'GET'
+                }).done((result) => {
+                    this.imports = result;
+                    this.render();
+                });
+            }
 
-    },
-
+        },
     render: function () {
         this.$el.html(importListTemplate({ imports: this.imports }));
 

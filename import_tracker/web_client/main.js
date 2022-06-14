@@ -12,9 +12,8 @@ wrap(AssetstoreView, 'render', function (render) {
     render.call(this);
 
     this.$el.find('.g-current-assetstores-container .g-body-title').after(
-        '<a class="g-view-imports btn btn-sm btn-primary" href="#assetstore/all_imports">\
-        <i class="icon-link-ext"></i>View all past Imports</a>'
-    )
+        '<a class="g-view-imports btn btn-sm btn-primary" href="#assetstore/all_imports"><i class="icon-link-ext"></i>View all past Imports</a>'
+    );
 
     // Inject new button into each assetstore
     const assetstores = this.collection.toArray();
