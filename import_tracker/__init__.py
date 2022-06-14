@@ -2,7 +2,7 @@ from girder import plugin, events
 from girder.utility.model_importer import ModelImporter
 
 from import_tracker.models import AssetstoreImport
-from import_tracker.rest import listImports
+from import_tracker.rest import listImports, listAllImports
 
 
 class GirderPlugin(plugin.GirderPlugin):
@@ -21,3 +21,4 @@ class GirderPlugin(plugin.GirderPlugin):
 
         # API
         info['apiRoot'].assetstore.route('GET', (':id', 'imports'), listImports)
+        info['apiRoot'].assetstore.route('GET', ('all_imports',), listAllImports)
