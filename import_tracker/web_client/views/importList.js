@@ -51,8 +51,8 @@ var importList = View.extend({
                     this.render();
                 });
             }
-
         },
+
     render: function () {
         this.$el.html(importListTemplate({ imports: this.imports }));
 
