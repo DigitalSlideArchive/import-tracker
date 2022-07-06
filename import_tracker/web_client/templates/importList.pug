@@ -3,9 +3,10 @@ table.g-imports-list-table
     tr
       th Actions
       th Started
-      th Destination ID
-      th Destination Type
+      th Assetstore Name
       th Import Path
+      th Destination Type
+      th Destination Path
       th Leafed Folders
       th Progress
       th File Include Regex
@@ -20,11 +21,13 @@ table.g-imports-list-table
         td
           span= _import.started
         td
-          span= _import.params.destinationId
+          span= _import._assetstoreName
+        td
+          span= _import.params.importPath
         td
           span= _import.params.destinationType
         td
-          span= _import.params.importPath
+          span= _import._destinationPath
         td
           span= _import.params.leafFoldersAsItems
         td
