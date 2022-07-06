@@ -2,7 +2,7 @@
 from girder.api import access
 from girder.utility import path, model_importer
 from girder.api.describe import Description, autoDescribeRoute
-from girder.constants import SortDir, AccessType
+from girder.constants import SortDir
 from girder.api.rest import boundHandler
 from girder.models.assetstore import Assetstore
 
@@ -24,7 +24,10 @@ def processCursor(cursor, user):
         row['_assetstoreName'] = lookedupAssetstores[row['assetstoreId']]
         model = model_importer.ModelImporter.model(row['params']['destinationType'])
         doc = model.load(row['params']['destinationId'], user=user)
-        row['_destinationPath'] = path.getResourcePath(row['params']['destinationType'], doc)
+        row['_destinationPath'] = path.getResourcePath(
+            row['params']['destinationType'],
+            doc
+            )
     return results
 
 
@@ -51,7 +54,7 @@ def listImports(self, id, limit, offset, sort):
 @access.admin
 @boundHandler
 @autoDescribeRoute(
-    Description("List all past imports for all assetstores.")
+    Description('List all past imports for all assetstores.')
     .pagingParams(defaultSort='started', defaultSortDir=SortDir.DESCENDING)
 )
 def listAllImports(self, limit, offset, sort):
