@@ -27,8 +27,8 @@ def processCursor(cursor, user):
         model = model_importer.ModelImporter.model(row['params']['destinationType'])
         doc = model.load(row['params']['destinationId'], user=user)
         if(db.girder[row['params']['destinationType']].find(
-            {'_id': ObjectId(row['params']['destinationId'])}
-            ).count()):
+                {'_id': ObjectId(row['params']['destinationId'])}
+                ).count()):
             row['_destinationPath'] = path.getResourcePath(
                 row['params']['destinationType'],
                 doc,
