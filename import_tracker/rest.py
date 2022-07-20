@@ -5,7 +5,6 @@ from girder.api.describe import Description, autoDescribeRoute
 from girder.constants import SortDir
 from girder.api.rest import boundHandler
 from girder.models.assetstore import Assetstore
-from girder.models import getDbConnection
 
 
 from .models import AssetstoreImport
