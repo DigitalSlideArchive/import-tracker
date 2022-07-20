@@ -15,7 +15,7 @@ table.g-imports-list-table
     each _import, i in imports
       tr
         td
-          button.re-import-btn.btn.btn-sm.btn-success(index=i)
+          button.re-import-btn.btn.btn-sm.btn-success(index=i, disabled=(_import._destinationPath =='does not exist') )
             i.icon-cw
             |  Re-Import
         td(data-id=_import.started, data-toggle='tooltip', title=_import.started)
