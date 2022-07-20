@@ -16,7 +16,6 @@ from bson.objectid import ObjectId
 def processCursor(cursor, user):
     lookedupAssetstores = {}
     results = list(cursor)
-    db = getDbConnection()
 
     for row in results:
         if row['assetstoreId'] not in lookedupAssetstores:
@@ -26,9 +25,7 @@ def processCursor(cursor, user):
         row['_assetstoreName'] = lookedupAssetstores[row['assetstoreId']]
         model = model_importer.ModelImporter.model(row['params']['destinationType'])
         doc = model.load(row['params']['destinationId'], user=user)
-        if(db.girder[row['params']['destinationType']].find(
-                {'_id': ObjectId(row['params']['destinationId'])}
-                ).count()):
+        if doc:
             row['_destinationPath'] = path.getResourcePath(
                 row['params']['destinationType'],
                 doc,
