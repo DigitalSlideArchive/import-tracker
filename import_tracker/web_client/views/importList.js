@@ -53,8 +53,9 @@ var importList = View.extend({
             }
         },
 
-    render: function () {
+    render() {
         this.$el.html(importListTemplate({ imports: this.imports }));
+        this.$el.tooltip();
 
         return this;
     }
