@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
-from genericpath import exists
 from girder.api import access
 from girder.utility import path, model_importer
 from girder.api.describe import Description, autoDescribeRoute
 from girder.constants import SortDir
 from girder.api.rest import boundHandler
 from girder.models.assetstore import Assetstore
-from girder.models.folder import Folder
 from girder.models import getDbConnection
 
 
@@ -28,7 +26,9 @@ def processCursor(cursor, user):
         row['_assetstoreName'] = lookedupAssetstores[row['assetstoreId']]
         model = model_importer.ModelImporter.model(row['params']['destinationType'])
         doc = model.load(row['params']['destinationId'], user=user)
-        if(db.girder[row['params']['destinationType']].find({'_id': ObjectId(row['params']['destinationId'])}).count()):
+        if(db.girder[row['params']['destinationType']].find(
+            {'_id': ObjectId(row['params']['destinationId'])}
+            ).count()):
             row['_destinationPath'] = path.getResourcePath(
                 row['params']['destinationType'],
                 doc,
