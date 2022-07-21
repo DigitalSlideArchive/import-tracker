@@ -11,6 +11,10 @@ wrap(AssetstoreView, 'render', function (render) {
     // Call the underlying render function that we are wrapping
     render.call(this);
 
+    this.$el.find('.g-current-assetstores-container .g-body-title').after(
+        '<a class="g-view-imports btn btn-sm btn-primary" href="#assetstore/all_imports"><i class="icon-link-ext"></i>View all past Imports</a>'
+    );
+
     // Inject new button into each assetstore
     const assetstores = this.collection.toArray();
     this.$('.g-assetstore-import-button-container').after(
@@ -21,4 +25,7 @@ wrap(AssetstoreView, 'render', function (render) {
 // Setup router to assetstore imports view
 router.route('assetstore/:id/imports', 'importsPage', function (id) {
     events.trigger('g:navigateTo', importListView, { id });
+});
+router.route('assetstore/all_imports', 'importsPage', function () {
+    events.trigger('g:navigateTo', importListView);
 });

@@ -18,7 +18,7 @@ var importList = View.extend({
             }
 
             // Re-perform import
-            const assetstore = new AssetstoreModel({ _id: this.assetstoreId });
+            const assetstore = new AssetstoreModel({ _id: importEvent.assetstoreId });
             const destType = importEvent.params.destinationType;
             const destId = importEvent.params.destinationId;
             assetstore.off('g:imported').on('g:imported', function () {
@@ -29,20 +29,33 @@ var importList = View.extend({
         }
     },
 
-    initialize: function ({ id }) {
-        this.assetstoreId = id;
-        this.imports = [];
-        restRequest({
-            url: `assetstore/${id}/imports`,
-            method: 'GET'
-        }).done((result) => {
-            this.imports = result;
-            this.render();
-        });
-    },
+    initialize:
+        function ({ id }) {
+            if (id) {
+                this.assetstoreId = id;
+                this.imports = [];
+                restRequest({
+                    url: `assetstore/${id}/imports`,
+                    method: 'GET'
+                }).done((result) => {
+                    this.imports = result;
+                    this.render();
+                });
+            } else {
+                this.imports = [];
+                restRequest({
+                    url: `assetstore/all_imports`,
+                    method: 'GET'
+                }).done((result) => {
+                    this.imports = result;
+                    this.render();
+                });
+            }
+        },
 
-    render: function () {
+    render() {
         this.$el.html(importListTemplate({ imports: this.imports }));
+        this.$el.tooltip();
 
         return this;
     }

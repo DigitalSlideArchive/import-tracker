@@ -3,9 +3,10 @@ table.g-imports-list-table
     tr
       th Actions
       th Started
-      th Destination ID
-      th Destination Type
+      th Assetstore Name
       th Import Path
+      th Destination Type
+      th Destination Path
       th Leafed Folders
       th Progress
       th File Include Regex
@@ -14,17 +15,19 @@ table.g-imports-list-table
     each _import, i in imports
       tr
         td
-          button.re-import-btn.btn.btn-sm.btn-success(index=i)
+          button.re-import-btn.btn.btn-sm.btn-success(index=i, disabled=(_import._destinationPath =='does not exist'))
             i.icon-cw
             |  Re-Import
-        td
+        td(data-id=_import.started, data-toggle='tooltip', title=_import.started)
           span= _import.started
-        td
-          span= _import.params.destinationId
+        td(data-id=_import._assetstoreName, data-toggle='tooltip', title=_import._assetstoreName)
+          span= _import._assetstoreName
+        td(data-id=_import.params.importPath, data-toggle='tooltip', title=_import.params.importPath)
+          span= _import.params.importPath
         td
           span= _import.params.destinationType
-        td
-          span= _import.params.importPath
+        td(data-id=_import.params.destinationId, data-toggle='tooltip', title=_import._destinationPath + '\n' + _import.params.destinationId)
+          span= _import._destinationPath
         td
           span= _import.params.leafFoldersAsItems
         td
