@@ -1,10 +1,12 @@
 import AssetstoreView from '@girder/core/views/body/AssetstoresView';
+import FilesystemImportView from '@girder/core/views/body/FilesystemImportView';
 import { wrap } from '@girder/core/utilities/PluginUtils';
 import events from '@girder/core/events';
 import router from '@girder/core/router';
 
 import importDataButton from './templates/assetstoreButtonsExtension.pug';
 import importListView from './views/importList';
+import duplicateFilesInput from './templates/duplicateFilesInput.pug';
 
 // Inject button to navigate to imports page in each assetstore in view
 wrap(AssetstoreView, 'render', function (render) {
@@ -29,3 +31,10 @@ router.route('assetstore/:id/imports', 'importsPage', function (id) {
 router.route('assetstore/all_imports', 'importsPage', function () {
     events.trigger('g:navigateTo', importListView);
 });
+
+// Add duplicate_files option to Import Asset form
+wrap(FilesystemImportView, 'render', function (render) {
+    render.call(this);
+
+    this.$('.form-group').last().after(duplicateFilesInput)
+})
