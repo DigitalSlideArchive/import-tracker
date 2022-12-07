@@ -1,16 +1,21 @@
 table.g-imports-list-table
+  - var anyRegex = false
+  for _import in imports
+    if _import.params.fileIncludeRegex || _import.params.fileExcludeRegex
+      - anyRegex = True
   thead
     tr
       th Actions
       th Started
       th Assetstore Name
       th Import Path
-      th Destination Type
+      //- th Destination Type
       th Destination Path
       th Leafed Folders
       th Progress
-      th File Include Regex
-      th File Exclude Regex
+      if anyRegex
+        th File Include Regex
+        th File Exclude Regex
   tbody
     each _import, i in imports
       tr
@@ -19,20 +24,22 @@ table.g-imports-list-table
             i.icon-cw
             |  Re-Import
         td(data-id=_import.started, data-toggle='tooltip', title=_import.started)
-          span= _import.started
+          span= moment(_import.started).format('YYYY-MM-DD HH:mm:ss.SSS')
         td(data-id=_import._assetstoreName, data-toggle='tooltip', title=_import._assetstoreName)
           span= _import._assetstoreName
         td(data-id=_import.params.importPath, data-toggle='tooltip', title=_import.params.importPath)
           span= _import.params.importPath
-        td
-          span= _import.params.destinationType
+        //-
+          td
+            span= _import.params.destinationType
         td(data-id=_import.params.destinationId, data-toggle='tooltip', title=_import._destinationPath + '\n' + _import.params.destinationId)
           span= _import._destinationPath
         td
           span= _import.params.leafFoldersAsItems
         td
           span= _import.params.progress
-        td
-          span= _import.params.fileIncludeRegex
-        td
-          span= _import.params.fileExcludeRegex
+        if anyRegex
+          td
+            span= _import.params.fileIncludeRegex
+          td
+            span= _import.params.fileExcludeRegex

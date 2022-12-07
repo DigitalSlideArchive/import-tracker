@@ -1,4 +1,5 @@
 import $ from 'jquery';
+import moment from 'moment';
 
 import AssetstoreModel from '@girder/core/models/AssetstoreModel';
 import View from '@girder/core/views/View';
@@ -54,7 +55,10 @@ var importList = View.extend({
         },
 
     render() {
-        this.$el.html(importListTemplate({ imports: this.imports }));
+        this.$el.html(importListTemplate({
+            imports: this.imports,
+            moment: moment
+        }));
         this.$el.tooltip();
 
         return this;
