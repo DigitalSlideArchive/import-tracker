@@ -1,8 +1,9 @@
-from bson.objectid import ObjectId
 from datetime import datetime
+
+from bson.objectid import ObjectId
 from girder.events import Event
-from girder.models.model_base import Model
 from girder.exceptions import ValidationException
+from girder.models.model_base import Model
 
 
 class AssetstoreImport(Model):

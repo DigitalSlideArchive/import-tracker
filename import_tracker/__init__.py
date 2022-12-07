@@ -1,8 +1,14 @@
-from girder import plugin, events
+import girder.api.v1.assetstore
+from girder import events, plugin
 from girder.utility.model_importer import ModelImporter
 
 from import_tracker.models import AssetstoreImport
-from import_tracker.rest import listImports, listAllImports
+from import_tracker.rest import listAllImports, listImports
+
+girder.api.v1.assetstore.Assetstore.importData.description.param(
+    'flag',
+    'Whether folders containing only files should be imported as items.',
+    dataType='boolean', required=False, default=False)
 
 
 class GirderPlugin(plugin.GirderPlugin):

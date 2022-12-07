@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
+from bson.objectid import ObjectId
 from girder.api import access
-from girder.utility import path, model_importer
 from girder.api.describe import Description, autoDescribeRoute
-from girder.constants import SortDir
 from girder.api.rest import boundHandler
+from girder.constants import SortDir
 from girder.models.assetstore import Assetstore
-
+from girder.utility import model_importer, path
 
 from .models import AssetstoreImport
-
-from bson.objectid import ObjectId
 
 
 def processCursor(cursor, user):
@@ -29,7 +27,7 @@ def processCursor(cursor, user):
                 row['params']['destinationType'],
                 doc,
                 user=user
-                )
+            )
         else:
             row['_destinationPath'] = 'does not exist'
     return results
