@@ -24,6 +24,11 @@ class GirderPlugin(plugin.GirderPlugin):
             'create_assetstore_import',
             AssetstoreImport().createAssetstoreImport,
         )
+        events.bind(
+            'rest.post.assetstore/:id/import.after',
+            'update_assetstore_import',
+            AssetstoreImport().updateAssetstoreImport,
+        )
 
         # API
         info['apiRoot'].assetstore.route('GET', (':id', 'imports'), listImports)
