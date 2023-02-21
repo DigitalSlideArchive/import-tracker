@@ -1,3 +1,4 @@
+import threading
 from datetime import datetime
 
 from bson.objectid import ObjectId
@@ -11,10 +12,13 @@ class AssetstoreImport(Model):
 
     def initialize(self):
         self.name = 'assetstoreImport'
+        self._recentParamsLock = threading.RLock()
+        self._recentParams = []
+        self._recentParamsMaxSize = 100
 
     def validate(self, doc):
         fields = {'name', 'started', 'assetstoreId', 'params'}
-        missing_keys = doc.keys() - fields
+        missing_keys = fields - doc.keys()
         if missing_keys:
             raise ValidationException('Fields missing.', ','.join(missing_keys))
 
@@ -22,7 +26,7 @@ class AssetstoreImport(Model):
 
     def createAssetstoreImport(self, event: Event):
         now = datetime.utcnow()
-        return self.save(
+        record = self.save(
             {
                 'name': now.isoformat(),
                 'started': now,
@@ -30,3 +34,19 @@ class AssetstoreImport(Model):
                 'params': event.info['params'],
             }
         )
+        with self._recentParamsLock:
+            self._recentParams = self._recentParams[-self._recentParamsMaxSize:]
+            self._recentParams.append((record, event.info['params']))
+        return record
+
+    def updateAssetstoreImport(self, event: Event):
+        record = None
+        with self._recentParamsLock:
+            for rrecord, rparams in self._recentParams:
+                if event.info['params'] is rparams:
+                    record = rrecord
+        if record:
+            now = datetime.utcnow()
+            record = self.load(id=record['_id'])
+            record['ended'] = now
+            record = self.save(record)

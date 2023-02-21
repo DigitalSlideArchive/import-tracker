@@ -7,6 +7,7 @@ table.g-imports-list-table
     tr
       th Actions
       th Started
+      th Ended
       th Assetstore Name
       th Import Path
       //- th Destination Type
@@ -25,6 +26,8 @@ table.g-imports-list-table
             |  Re-Import
         td(data-id=_import.started, data-toggle='tooltip', title=_import.started)
           span= moment(_import.started).format('YYYY-MM-DD HH:mm:ss.SSS')
+        td(data-id=_import.ended, data-toggle='tooltip', title=_import.ended || '')
+          span= _import.ended ? moment(_import.ended).format('YYYY-MM-DD HH:mm:ss.SSS') : ''
         td(data-id=_import._assetstoreName, data-toggle='tooltip', title=_import._assetstoreName)
           span= _import._assetstoreName
         td(data-id=_import.params.importPath, data-toggle='tooltip', title=_import.params.importPath)
