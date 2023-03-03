@@ -39,7 +39,7 @@ var importList = View.extend({
                 this.imports = [];
                 restRequest({
                     url: `assetstore/${id}/imports`,
-                    data: {unique: unique || false}
+                    data: { unique: unique || false }
                 }).done((result) => {
                     this.imports = result;
                     this.render();
@@ -48,7 +48,7 @@ var importList = View.extend({
                 this.imports = [];
                 restRequest({
                     url: `assetstore/all_imports`,
-                    data: {unique: unique || false}
+                    data: { unique: unique || false }
                 }).done((result) => {
                     this.imports = result;
                     this.render();
