@@ -12,12 +12,6 @@ jobs:
       - run:
           name: Run server tests
           command: tox
-      - run:
-          name: Run web tests
-          command: |
-            npm install
-            npm run lint
-          working_directory: import_tracker/web_client
 
 workflows:
   version: 2

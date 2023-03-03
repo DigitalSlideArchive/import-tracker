@@ -31,12 +31,7 @@ table.g-imports-list-table
       - anyLeafed = true
     if !_import.params.progress
       - anyNoProgress = true
-    -
-      Object.keys(_import.params).forEach((key) => {
-        if (['importPath', 'destinationId', 'destinationType', 'leafFoldersAsItems', 'progress', 'fileIncludeRegex', 'fileExcludeRegex'].indexOf(key) < 0 && otherParams.indexOf(key) < 0) {
-          otherParams.push(key);
-        }
-      });
+    - Object.keys(_import.params).forEach((key) => { if (['importPath', 'destinationId', 'destinationType', 'leafFoldersAsItems', 'progress', 'fileIncludeRegex', 'fileExcludeRegex'].indexOf(key) < 0 && otherParams.indexOf(key) < 0) { otherParams.push(key); } });
     if _import._count
       - showCount = true;
   thead
