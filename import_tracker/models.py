@@ -42,9 +42,11 @@ class AssetstoreImport(Model):
     def updateAssetstoreImport(self, event: Event):
         record = None
         with self._recentParamsLock:
-            for rrecord, rparams in self._recentParams:
+            for idx, (rrecord, rparams) in enumerate(self._recentParams):
                 if event.info['params'] is rparams:
                     record = rrecord
+                    self._recentParams.pop(idx)
+                    break
         if record:
             now = datetime.utcnow()
             record = self.load(id=record['_id'])

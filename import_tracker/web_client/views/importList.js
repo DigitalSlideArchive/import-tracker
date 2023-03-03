@@ -31,13 +31,15 @@ var importList = View.extend({
     },
 
     initialize:
-        function ({ id }) {
+        function ({ id, unique }) {
+            this._unique = unique;
+            this._assetstoreId = id;
             if (id) {
                 this.assetstoreId = id;
                 this.imports = [];
                 restRequest({
                     url: `assetstore/${id}/imports`,
-                    method: 'GET'
+                    data: {unique: unique || false}
                 }).done((result) => {
                     this.imports = result;
                     this.render();
@@ -46,7 +48,7 @@ var importList = View.extend({
                 this.imports = [];
                 restRequest({
                     url: `assetstore/all_imports`,
-                    method: 'GET'
+                    data: {unique: unique || false}
                 }).done((result) => {
                     this.imports = result;
                     this.render();
@@ -57,7 +59,9 @@ var importList = View.extend({
     render() {
         this.$el.html(importListTemplate({
             imports: this.imports,
-            moment: moment
+            moment: moment,
+            unique: this._unique,
+            assetstoreId: this._assetstoreId
         }));
         this.$el.tooltip();
 

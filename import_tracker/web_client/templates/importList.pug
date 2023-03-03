@@ -1,22 +1,64 @@
+.it-controls
+  if !unique
+    if !assetstoreId
+      a.g-view-imports.btn.btn-sm.btn-primary(href='#assetstore/all_unique_imports')
+        i.icon-link-ext
+        | View unique past Imports
+    else
+      a.g-view-imports.btn.btn-sm.btn-primary(href=`#assetstore/${assetstoreId}/unique_imports`)
+        i.icon-link-ext
+        | View unique past Imports
+  else
+    if !assetstoreId
+      a.g-view-imports.btn.btn-sm.btn-primary(href='#assetstore/all_imports')
+        i.icon-link-ext
+        | View all past Imports
+    else
+      a.g-view-imports.btn.btn-sm.btn-primary(href=`#assetstore/${assetstoreId}/imports`)
+        i.icon-link-ext
+        | View all past Imports
 table.g-imports-list-table
-  - var anyRegex = false
+  -
+    var anyRegex = false;
+    var anyLeafed = false;
+    var anyNoProgress;
+    var otherParams = [];
+    var showCount = false;
   for _import in imports
     if _import.params.fileIncludeRegex || _import.params.fileExcludeRegex
       - anyRegex = True
+    if _import.params.leafFoldersAsItems && _import.params.leafFoldersAsItems !== 'false'
+      - anyLeafed = true
+    if !_import.params.progress
+      - anyNoProgress = true
+    -
+      Object.keys(_import.params).forEach((key) => {
+        if (['importPath', 'destinationId', 'destinationType', 'leafFoldersAsItems', 'progress', 'fileIncludeRegex', 'fileExcludeRegex'].indexOf(key) < 0 && otherParams.indexOf(key) < 0) {
+          otherParams.push(key);
+        }
+      });
+    if _import._count
+      - showCount = true;
   thead
     tr
       th Actions
+      if showCount
+        th Repeats
       th Started
       th Ended
       th Assetstore Name
       th Import Path
       //- th Destination Type
       th Destination Path
-      th Leafed Folders
-      th Progress
+      if anyLeafed
+        th Leafed Folders
+      if anyNoProgress
+        th Progress
       if anyRegex
         th File Include Regex
         th File Exclude Regex
+      for key in otherParams
+        th= key
   tbody
     each _import, i in imports
       tr
@@ -24,6 +66,9 @@ table.g-imports-list-table
           button.re-import-btn.btn.btn-sm.btn-success(index=i, disabled=(_import._destinationPath =='does not exist'))
             i.icon-cw
             |  Re-Import
+        if showCount
+          td(data-id=_import._count, data-toggle='tooltip', title=_import._count !== 1 ? `Imported ${_import._count} times` : 'Imported once')
+            span= _import._count
         td(data-id=_import.started, data-toggle='tooltip', title=_import.started)
           span= moment(_import.started).format('YYYY-MM-DD HH:mm:ss.SSS')
         td(data-id=_import.ended, data-toggle='tooltip', title=_import.ended || '')
@@ -37,12 +82,17 @@ table.g-imports-list-table
             span= _import.params.destinationType
         td(data-id=_import.params.destinationId, data-toggle='tooltip', title=_import._destinationPath + '\n' + _import.params.destinationId)
           span= _import._destinationPath
-        td
-          span= _import.params.leafFoldersAsItems
-        td
-          span= _import.params.progress
+        if anyLeafed
+          td
+            span= _import.params.leafFoldersAsItems
+        if anyNoProgress
+          td
+            span= _import.params.progress
         if anyRegex
           td
             span= _import.params.fileIncludeRegex
           td
             span= _import.params.fileExcludeRegex
+        for key in otherParams
+          td
+            span= _import.params[key]

@@ -6,8 +6,8 @@ from import_tracker.models import AssetstoreImport
 from import_tracker.rest import listAllImports, listImports
 
 girder.api.v1.assetstore.Assetstore.importData.description.param(
-    'flag',
-    'Whether folders containing only files should be imported as items.',
+    'excludeExisting',
+    'If true, skip files whose paths exist anywhere in the system.',
     dataType='boolean', required=False, default=False)
 
 

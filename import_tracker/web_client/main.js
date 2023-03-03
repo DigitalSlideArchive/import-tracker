@@ -26,6 +26,12 @@ wrap(AssetstoreView, 'render', function (render) {
 router.route('assetstore/:id/imports', 'importsPage', function (id) {
     events.trigger('g:navigateTo', importListView, { id });
 });
+router.route('assetstore/:id/unique_imports', 'importsPage', function (id) {
+    events.trigger('g:navigateTo', importListView, { id, unique: true });
+});
 router.route('assetstore/all_imports', 'importsPage', function () {
     events.trigger('g:navigateTo', importListView);
+});
+router.route('assetstore/all_unique_imports', 'importsPage', function () {
+    events.trigger('g:navigateTo', importListView, { unique: true });
 });
