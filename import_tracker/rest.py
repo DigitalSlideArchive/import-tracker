@@ -44,7 +44,6 @@ def getImports(query=None, user=None, unique=False, limit=None, offset=None, sor
             sort=sort,
         )
     else:
-        print(sort)
         cursor = AssetstoreImport().collection.aggregate([
             {'$match': query or {}},
             {'$sort': {k: v for k, v in sort}},
