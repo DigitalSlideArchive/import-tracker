@@ -31,7 +31,7 @@ class AssetstoreImport(Model):
                 'name': now.isoformat(),
                 'started': now,
                 'assetstoreId': ObjectId(event.info['id']),
-                'params': event.info['params'],
+                'params': {k: v for k, v in sorted(event.info['params'].items())},
             }
         )
         with self._recentParamsLock:
