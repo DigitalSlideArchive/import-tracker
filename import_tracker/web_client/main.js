@@ -6,6 +6,9 @@ import router from '@girder/core/router';
 import importDataButton from './templates/assetstoreButtonsExtension.pug';
 import importListView from './views/importList';
 
+// import modules for side effects
+import './JobStatus';
+
 // Inject button to navigate to imports page in each assetstore in view
 wrap(AssetstoreView, 'render', function (render) {
     // Call the underlying render function that we are wrapping

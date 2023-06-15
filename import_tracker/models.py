@@ -1,8 +1,6 @@
-import threading
 from datetime import datetime
 
 from bson.objectid import ObjectId
-from girder.events import Event
 from girder.exceptions import ValidationException
 from girder.models.model_base import Model
 
@@ -12,9 +10,6 @@ class AssetstoreImport(Model):
 
     def initialize(self):
         self.name = 'assetstoreImport'
-        self._recentParamsLock = threading.RLock()
-        self._recentParams = []
-        self._recentParamsMaxSize = 100
 
     def validate(self, doc):
         fields = {'name', 'started', 'assetstoreId', 'params'}
@@ -24,31 +19,22 @@ class AssetstoreImport(Model):
 
         return doc
 
-    def createAssetstoreImport(self, event: Event):
+    def createAssetstoreImport(self, assetstore, params):
         now = datetime.utcnow()
         record = self.save(
             {
                 'name': now.isoformat(),
                 'started': now,
-                'assetstoreId': ObjectId(event.info['id']),
-                'params': {k: v for k, v in sorted(event.info['params'].items())},
+                'assetstoreId': ObjectId(assetstore['_id']),
+                'params': {k: v for k, v in sorted(params.items())},
             }
         )
-        with self._recentParamsLock:
-            self._recentParams = self._recentParams[-self._recentParamsMaxSize:]
-            self._recentParams.append((record, event.info['params']))
         return record
 
-    def updateAssetstoreImport(self, event: Event):
-        record = None
-        with self._recentParamsLock:
-            for idx, (rrecord, rparams) in enumerate(self._recentParams):
-                if event.info['params'] is rparams:
-                    record = rrecord
-                    self._recentParams.pop(idx)
-                    break
-        if record:
-            now = datetime.utcnow()
-            record = self.load(id=record['_id'])
-            record['ended'] = now
-            record = self.save(record)
+    def markEnded(self, record, success=None):
+        now = datetime.utcnow()
+        record['ended'] = now
+        if success is not None:
+            record['success'] = success
+        record = self.save(record)
+        return record
