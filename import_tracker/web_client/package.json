@@ -6,11 +6,15 @@
     "homepage": "https://github.com/girder/import_tracker",
     "license": "Apache-2.0",
     "peerDependencies": {
-        "@girder/core": "*"
+        "@girder/core": "*",
+        "@girder/jobs": "*"
     },
     "girderPlugin": {
         "name": "import_tracker",
-        "main": "./main.js"
+        "main": "./main.js",
+        "dependencies": [
+            "jobs"
+        ]
     },
     "scripts": {
         "lint": "eslint . && pug-lint . && stylint"
