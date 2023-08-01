@@ -30,7 +30,7 @@ setup(
     keywords='girder-plugin, import_tracker',
     name='import_tracker',
     packages=find_packages(exclude=['test', 'test.*']),
-    url='https://github.com/girder/import-tracker',
+    url='https://github.com/DigitalSlideArchive/import-tracker',
     version='0.1.0',
     zip_safe=False,
     entry_points={'girder.plugin': ['import_tracker = import_tracker:GirderPlugin']},
