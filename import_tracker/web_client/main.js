@@ -8,6 +8,7 @@ import router from '@girder/core/router';
 
 import importDataButton from './templates/assetstoreButtonsExtension.pug';
 import importListView from './views/importList';
+import reImportView from './views/reImport';
 import excludeExistingInput from './templates/excludeExistingInput.pug';
 
 // import modules for side effects
@@ -33,13 +34,14 @@ wrap(AssetstoreView, 'render', function (render) {
 wrap(FilesystemImportView, 'render', function (render) {
     render.call(this);
 
-    this.$('.form-group').last().after(excludeExistingInput);
+    this.$('.form-group').last().after(excludeExistingInput({ type: 'filesystem' }));
 });
 wrap(S3ImportView, 'render', function (render) {
     render.call(this);
 
-    this.$('.form-group').last().after(excludeExistingInput);
+    this.$('.form-group').last().after(excludeExistingInput({ type: 's3' }));
 });
+
 // We can't just wrap the submit events, as we need to modify what is passed to
 // the assetstore import method
 FilesystemImportView.prototype.events['submit .g-filesystem-import-form'] = function (e) {
@@ -70,7 +72,7 @@ S3ImportView.prototype.events['submit .g-s3-import-form'] = function (e) {
 
     var destId = this.$('#g-s3-import-dest-id').val().trim().split(/\s/)[0],
         destType = this.$('#g-s3-import-dest-type').val(),
-        excludeExisting = this.$('#g-filesystem-import-exclude-existing').val();
+        excludeExisting = this.$('#g-s3-import-exclude-existing').val();
 
     this.$('.g-validation-failed-message').empty();
 
@@ -99,4 +101,10 @@ router.route('assetstore/all_imports', 'importsPage', function () {
 });
 router.route('assetstore/all_unique_imports', 'importsPage', function () {
     events.trigger('g:navigateTo', importListView, { unique: true });
+});
+
+// Setup router for re-import view
+router.route('assetstore/:id/re-import/:prev', 'assetstoreImport', function (assetstoreId, importId) {
+    events.trigger('g:navigateTo', reImportView, { assetstoreId, importId });
+    AssetstoreView.import(assetstoreId);
 });

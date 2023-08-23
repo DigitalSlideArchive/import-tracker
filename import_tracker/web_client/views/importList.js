@@ -27,6 +27,18 @@ var importList = View.extend({
             }, this).on('g:error', function (resp) {
                 this.$('.g-validation-failed-message').text(resp.responseJSON.message);
             }, this).import(importEvent.params);
+        },
+        'click .re-import-edit-btn': function (e) {
+            const index = Number($(e.currentTarget).attr('index'));
+            const importEvent = this.imports[index];
+            if (importEvent === undefined) {
+                return;
+            }
+
+            const assetstoreId = importEvent.assetstoreId;
+            const importId = importEvent._id;
+
+            router.navigate(`assetstore/${assetstoreId}/re-import/${importId}`, { trigger: true });
         }
     },
 

@@ -61,6 +61,9 @@ table.g-imports-list-table
           button.re-import-btn.btn.btn-sm.btn-success(index=i, disabled=(_import._destinationPath =='does not exist'))
             i.icon-cw
             |  Re-Import
+          button.re-import-edit-btn.btn.btn-sm(index=i, disabled=(_import._destinationPath =='does not exist'))
+            i.icon-link-ext
+            |  Edit
         if showCount
           td(data-id=_import._count, data-toggle='tooltip', title=_import._count !== 1 ? `Imported ${_import._count} times` : 'Imported once')
             span= _import._count
