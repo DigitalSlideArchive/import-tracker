@@ -56,10 +56,13 @@ var reImportView = View.extend({
         restRequest({
             url: `resource/${destId}/path`,
             method: 'GET',
-            data: { type: destType }
+            data: { type: destType },
+            error: null
         }).done((path) => {
             console.log('path', path);
             this.$(`#g-${this.type}-import-dest-id`).val(`${destId} (${path})`);
+        }).fail(() => {
+            this.$(`#g-${this.type}-import-dest-id`).val('');
         });
 
         return this;

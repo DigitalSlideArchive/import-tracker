@@ -54,7 +54,7 @@ var importList = View.extend({
                     data: { unique: unique || false }
                 }).done((result) => {
                     this.imports = result;
-                    this.render();
+                    this.checkAssetstores();
                 });
             } else {
                 this.imports = [];
@@ -63,14 +63,26 @@ var importList = View.extend({
                     data: { unique: unique || false }
                 }).done((result) => {
                     this.imports = result;
-                    this.render();
+                    this.checkAssetstores();
                 });
             }
         },
 
+    checkAssetstores() {
+        restRequest({
+            url: 'assetstore',
+            data: { limit: 0 }
+        }).done((result) => {
+            const assetstores = result.map((a) => a._id);
+            this.assetstoreExists = this.imports.map((i) => assetstores.includes(i.assetstoreId));
+            this.render();
+        });
+    },
+
     render() {
         this.$el.html(importListTemplate({
             imports: this.imports,
+            assetstoreExists: this.assetstoreExists,
             moment: moment,
             unique: this._unique,
             assetstoreId: this._assetstoreId
