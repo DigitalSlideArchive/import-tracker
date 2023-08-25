@@ -37,8 +37,24 @@ var importList = View.extend({
 
             const assetstoreId = importEvent.assetstoreId;
             const importId = importEvent._id;
+            if (importId) {
+                router.navigate(`assetstore/${assetstoreId}/re-import/${importId}`, { trigger: true });
+                return;
+            }
 
-            router.navigate(`assetstore/${assetstoreId}/re-import/${importId}`, { trigger: true });
+            // If the importEvent aggregated 'unique' imports, we need to find a matching importId
+            restRequest({
+                url: `assetstore/${assetstoreId}/imports`,
+                data: { unique: false }
+            }).done((results) => {
+                const importId = results.filter((i) =>
+                    i.params.importPath === importEvent.params.importPath &&
+                    i.params.destinationId === importEvent.params.destinationId &&
+                    i.params.destinationType === importEvent.params.destinationType
+                )[0]._id;
+
+                router.navigate(`assetstore/${assetstoreId}/re-import/${importId}`, { trigger: true });
+            });
         }
     },
 
