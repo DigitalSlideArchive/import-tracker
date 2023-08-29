@@ -1,6 +1,7 @@
 import AssetstoreView from '@girder/core/views/body/AssetstoresView';
 import FilesystemImportView from '@girder/core/views/body/FilesystemImportView';
 import S3ImportView from '@girder/core/views/body/S3ImportView';
+import FolderModel from '@girder/core/models/FolderModel';
 
 import { wrap } from '@girder/core/utilities/PluginUtils';
 import events from '@girder/core/events';
@@ -40,6 +41,29 @@ wrap(S3ImportView, 'render', function (render) {
     render.call(this);
 
     this.$('.form-group').last().after(excludeExistingInput({ type: 's3' }));
+});
+
+const setBrowserRoot = (browserWidget, destId) => {
+    const folderId = destId.trim().split(/\s/)[0];
+    if(folderId) {
+        const folder = new FolderModel({ _id: folderId });
+        folder.once('g:fetched', () => {
+            if(!browserWidget.root || browserWidget.root.id !== folder.id) {
+                browserWidget.root = folder;
+                browserWidget._renderRootSelection();
+            }
+        }).fetch();
+    }
+};
+
+// If a root folder has already been set in the browser, make it the root
+wrap(FilesystemImportView, '_openBrowser', function (_openBrowser) {
+    setBrowserRoot(this._browserWidgetView, this.$('#g-filesystem-import-dest-id').val());
+    _openBrowser.call(this);
+});
+wrap(S3ImportView, '_openBrowser', function (_openBrowser) {
+    setBrowserRoot(this._browserWidgetView, this.$('#g-s3-import-dest-id').val());
+    _openBrowser.call(this);
 });
 
 // We can't just wrap the submit events, as we need to modify what is passed to
