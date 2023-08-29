@@ -45,10 +45,10 @@ wrap(S3ImportView, 'render', function (render) {
 
 const setBrowserRoot = (browserWidget, destId) => {
     const folderId = destId.trim().split(/\s/)[0];
-    if(folderId) {
+    if (folderId) {
         const folder = new FolderModel({ _id: folderId });
         folder.once('g:fetched', () => {
-            if(!browserWidget.root || browserWidget.root.id !== folder.id) {
+            if (!browserWidget.root || browserWidget.root.id !== folder.id) {
                 browserWidget.root = folder;
                 browserWidget._renderRootSelection();
             }
