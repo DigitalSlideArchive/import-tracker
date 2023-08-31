@@ -3,8 +3,11 @@ from bson.objectid import ObjectId
 from girder.api import access
 from girder.api.describe import Description, autoDescribeRoute
 from girder.api.rest import boundHandler
-from girder.constants import SortDir
+from girder.constants import AccessType, SortDir
 from girder.models.assetstore import Assetstore
+from girder.models.folder import Folder
+from girder.models.item import Item
+from girder.models.upload import Upload
 from girder.utility import model_importer, path
 
 from .models import AssetstoreImport
@@ -71,6 +74,22 @@ def getImports(query=None, user=None, unique=False, limit=None, offset=None, sor
     return processCursor(cursor, user)
 
 
+def collectLeafFiles(folder, assetstore, user):
+    Folder().updateFolder(folder)
+    child_items = Folder().childItems(folder)
+    child_folders = Folder().childFolders(folder, 'folder', user=user)
+
+    files = []
+    for item in child_items:
+        for (_, file) in Item().fileList(item, data=False):
+            files.append(file)
+
+    for child_folder in child_folders:
+        files += collectLeafFiles(child_folder, assetstore, user)
+
+    return files
+
+
 @access.admin
 @boundHandler
 @autoDescribeRoute(
@@ -98,3 +117,17 @@ def listAllImports(self, unique, limit, offset, sort):
     return getImports(
         None,
         self.getCurrentUser(), unique, limit, offset, sort)
+
+
+@access.admin
+@boundHandler
+@autoDescribeRoute(
+    Description('Move folder contents to an assetstore.')
+    .modelParam('id', 'Source folder ID', model=Folder, level=AccessType.WRITE)
+    .modelParam('assetstoreId', 'Destination assetstore ID', model=Assetstore, paramType='formData')
+)
+def moveFolder(self, folder, assetstore):
+    user = self.getCurrentUser()
+    files = collectLeafFiles(folder, assetstore, user)
+
+    return [Upload().moveFileToAssetstore(file, user, assetstore) for file in files]
