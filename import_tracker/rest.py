@@ -74,20 +74,20 @@ def getImports(query=None, user=None, unique=False, limit=None, offset=None, sor
     return processCursor(cursor, user)
 
 
-def collectLeafFiles(folder, assetstore, user):
+def moveLeafFiles(folder, user, assetstore):
     Folder().updateFolder(folder)
     child_items = Folder().childItems(folder)
     child_folders = Folder().childFolders(folder, 'folder', user=user)
 
-    files = []
+    results = []
     for item in child_items:
         for (_, file) in Item().fileList(item, data=False):
-            files.append(file)
+            results.append(Upload().moveFileToAssetstore(file, user, assetstore))
 
     for child_folder in child_folders:
-        files += collectLeafFiles(child_folder, assetstore, user)
+        results += moveLeafFiles(child_folder, user, assetstore)
 
-    return files
+    return results
 
 
 @access.admin
@@ -127,7 +127,4 @@ def listAllImports(self, unique, limit, offset, sort):
     .modelParam('assetstoreId', 'Destination assetstore ID', model=Assetstore, paramType='formData')
 )
 def moveFolder(self, folder, assetstore):
-    user = self.getCurrentUser()
-    files = collectLeafFiles(folder, assetstore, user)
-
-    return [Upload().moveFileToAssetstore(file, user, assetstore) for file in files]
+    return moveLeafFiles(folder, self.getCurrentUser(), assetstore)
