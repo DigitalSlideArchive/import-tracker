@@ -2,6 +2,10 @@ import AssetstoreView from '@girder/core/views/body/AssetstoresView';
 import FilesystemImportView from '@girder/core/views/body/FilesystemImportView';
 import S3ImportView from '@girder/core/views/body/S3ImportView';
 
+import CollectionModel from '@girder/core/models/CollectionModel';
+import FolderModel from '@girder/core/models/FolderModel';
+import UserModel from '@girder/core/models/UserModel';
+
 import { wrap } from '@girder/core/utilities/PluginUtils';
 import events from '@girder/core/events';
 import router from '@girder/core/router';
@@ -40,6 +44,49 @@ wrap(S3ImportView, 'render', function (render) {
     render.call(this);
 
     this.$('.form-group').last().after(excludeExistingInput({ type: 's3' }));
+});
+
+const setBrowserRoot = (view) => {
+    const browserWidget = view._browserWidgetView;
+    const destType = view.$('#g-filesystem-import-dest-type').val();
+    const destId = view.$('#g-filesystem-import-dest-id').val();
+    const resourceId = destId.trim().split(/\s/)[0];
+
+    const models = {
+        collection: CollectionModel,
+        folder: FolderModel,
+        user: UserModel
+    };
+
+    if (resourceId && destType in models) {
+        const model = new models[destType]({ _id: resourceId });
+
+        model.once('g:fetched', () => {
+            if (!browserWidget.root || browserWidget.root.id !== model.id) {
+                browserWidget.root = model;
+                browserWidget._renderRootSelection();
+            }
+        }).on('g:error', (err) => {
+            if (err.status === 400) {
+                events.trigger('g:alert', {
+                    icon: 'cancel',
+                    text: `No ${destType.toUpperCase()} with ID ${resourceId} found.`,
+                    type: 'danger',
+                    timeout: 4000
+                });
+            }
+        }).fetch({ ignoreError: true });
+    }
+};
+
+// If a root folder has already been set in the browser, make it the root
+wrap(FilesystemImportView, '_openBrowser', function (_openBrowser) {
+    setBrowserRoot(this);
+    _openBrowser.call(this);
+});
+wrap(S3ImportView, '_openBrowser', function (_openBrowser) {
+    setBrowserRoot(this);
+    _openBrowser.call(this);
 });
 
 // We can't just wrap the submit events, as we need to modify what is passed to
