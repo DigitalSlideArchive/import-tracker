@@ -27,6 +27,34 @@ var importList = View.extend({
             }, this).on('g:error', function (resp) {
                 this.$('.g-validation-failed-message').text(resp.responseJSON.message);
             }, this).import(importEvent.params);
+        },
+        'click .re-import-edit-btn': function (e) {
+            const index = Number($(e.currentTarget).attr('index'));
+            const importEvent = this.imports[index];
+            if (importEvent === undefined) {
+                return;
+            }
+
+            const assetstoreId = importEvent.assetstoreId;
+            const importId = importEvent._id;
+            if (importId) {
+                router.navigate(`assetstore/${assetstoreId}/re-import/${importId}`, { trigger: true });
+                return;
+            }
+
+            // If the importEvent aggregated 'unique' imports, we need to find a matching importId
+            restRequest({
+                url: `assetstore/${assetstoreId}/imports`,
+                data: { unique: false }
+            }).done((results) => {
+                const importId = results.filter((i) =>
+                    i.params.importPath === importEvent.params.importPath &&
+                    i.params.destinationId === importEvent.params.destinationId &&
+                    i.params.destinationType === importEvent.params.destinationType
+                )[0]._id;
+
+                router.navigate(`assetstore/${assetstoreId}/re-import/${importId}`, { trigger: true });
+            });
         }
     },
 
@@ -42,7 +70,7 @@ var importList = View.extend({
                     data: { unique: unique || false }
                 }).done((result) => {
                     this.imports = result;
-                    this.render();
+                    this.checkAssetstores();
                 });
             } else {
                 this.imports = [];
@@ -51,14 +79,26 @@ var importList = View.extend({
                     data: { unique: unique || false }
                 }).done((result) => {
                     this.imports = result;
-                    this.render();
+                    this.checkAssetstores();
                 });
             }
         },
 
+    checkAssetstores() {
+        restRequest({
+            url: 'assetstore',
+            data: { limit: 0 }
+        }).done((result) => {
+            const assetstores = result.map((a) => a._id);
+            this.assetstoreExists = this.imports.map((i) => assetstores.includes(i.assetstoreId));
+            this.render();
+        });
+    },
+
     render() {
         this.$el.html(importListTemplate({
             imports: this.imports,
+            assetstoreExists: this.assetstoreExists,
             moment: moment,
             unique: this._unique,
             assetstoreId: this._assetstoreId
