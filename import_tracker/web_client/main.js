@@ -46,10 +46,10 @@ wrap(S3ImportView, 'render', function (render) {
     this.$('.form-group').last().after(excludeExistingInput({ type: 's3' }));
 });
 
-const setBrowserRoot = (view) => {
+const setBrowserRoot = (view, type) => {
     const browserWidget = view._browserWidgetView;
-    const destType = view.$('#g-filesystem-import-dest-type').val();
-    const destId = view.$('#g-filesystem-import-dest-id').val();
+    const destType = view.$(`#g-${type}-import-dest-type`).val();
+    const destId = view.$(`#g-${type}-import-dest-id`).val();
     const resourceId = destId.trim().split(/\s/)[0];
 
     const models = {
@@ -81,11 +81,11 @@ const setBrowserRoot = (view) => {
 
 // If a root folder has already been set in the browser, make it the root
 wrap(FilesystemImportView, '_openBrowser', function (_openBrowser) {
-    setBrowserRoot(this);
+    setBrowserRoot(this, 'filesystem');
     _openBrowser.call(this);
 });
 wrap(S3ImportView, '_openBrowser', function (_openBrowser) {
-    setBrowserRoot(this);
+    setBrowserRoot(this, 's3');
     _openBrowser.call(this);
 });
 
