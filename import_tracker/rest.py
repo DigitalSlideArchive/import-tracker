@@ -5,6 +5,7 @@ from girder.api.describe import Description, autoDescribeRoute
 from girder.api.rest import boundHandler
 from girder.constants import AccessType, SortDir
 from girder.models.assetstore import Assetstore
+from girder.models.file import File
 from girder.models.folder import Folder
 from girder.models.item import Item
 from girder.models.upload import Upload
@@ -76,12 +77,24 @@ def getImports(query=None, user=None, unique=False, limit=None, offset=None, sor
 
 def moveLeafFiles(folder, user, assetstore):
     Folder().updateFolder(folder)
-    child_items = Folder().childItems(folder)
+
+    folder_item = Item().findOne({
+        'folderId': folder['_id'],
+    })
+    unique_clause = {'assetstoreId': {'$ne': ObjectId(assetstore['_id'])}}
+
     child_folders = Folder().childFolders(folder, 'folder', user=user)
+    child_items = Folder().childItems(folder, filters=unique_clause)
 
     results = []
+    for attached_file in File().find({
+        'attachedToId': folder_item['_id'],
+        **unique_clause
+    }):
+        results.append(Upload().moveFileToAssetstore(attached_file, user, assetstore))
+
     for item in child_items:
-        for (_, file) in Item().fileList(item, data=False):
+        for file in File().find({'itemId': ObjectId(item['_id']), **unique_clause}):
             results.append(Upload().moveFileToAssetstore(file, user, assetstore))
 
     for child_folder in child_folders:
