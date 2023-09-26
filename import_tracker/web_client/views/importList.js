@@ -62,26 +62,16 @@ var importList = View.extend({
         function ({ id, unique }) {
             this._unique = unique;
             this._assetstoreId = id;
-            if (id) {
-                this.assetstoreId = id;
-                this.imports = [];
-                restRequest({
-                    url: `assetstore/${id}/imports`,
-                    data: { unique: unique || false }
-                }).done((result) => {
-                    this.imports = result;
-                    this.checkAssetstores();
-                });
-            } else {
-                this.imports = [];
-                restRequest({
-                    url: `assetstore/all_imports`,
-                    data: { unique: unique || false }
-                }).done((result) => {
-                    this.imports = result;
-                    this.checkAssetstores();
-                });
-            }
+            this.imports = [];
+
+            const route = id ? `${id}/imports` : 'all_imports';
+            restRequest({
+                url: `assetstore/${route}`,
+                data: { unique: unique || false }
+            }).done((result) => {
+                this.imports = result;
+                this.checkAssetstores();
+            });
         },
 
     checkAssetstores() {
