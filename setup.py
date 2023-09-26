@@ -22,6 +22,7 @@ setup(
     description='A Girder plugin for data import tracking in HistomicsUI',
     install_requires=[
         'girder-jobs>=3.0.3',
+        'girder>=3.1.23',
     ],
     license='Apache Software License 2.0',
     long_description=readme,
