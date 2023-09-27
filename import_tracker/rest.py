@@ -3,9 +3,14 @@ from bson.objectid import ObjectId
 from girder.api import access
 from girder.api.describe import Description, autoDescribeRoute
 from girder.api.rest import boundHandler
-from girder.constants import SortDir
+from girder.constants import AccessType, SortDir
 from girder.models.assetstore import Assetstore
+from girder.models.file import File
+from girder.models.folder import Folder
+from girder.models.item import Item
+from girder.models.upload import Upload
 from girder.utility import model_importer, path
+from girder.utility.progress import setResponseTimeLimit
 
 from .models import AssetstoreImport
 
@@ -71,6 +76,36 @@ def getImports(query=None, user=None, unique=False, limit=None, offset=None, sor
     return processCursor(cursor, user)
 
 
+def moveLeafFiles(folder, user, assetstore):
+    Folder().updateFolder(folder)
+
+    folder_item = Item().findOne({
+        'folderId': folder['_id'],
+    })
+    unique_clause = {'assetstoreId': {'$ne': ObjectId(assetstore['_id'])}}
+
+    child_folders = Folder().childFolders(folder, 'folder', user=user)
+    child_items = Folder().childItems(folder, filters=unique_clause)
+
+    results = []
+    for attached_file in File().find({
+        'attachedToId': folder_item['_id'],
+        **unique_clause
+    }):
+        setResponseTimeLimit(86400)
+        results.append(Upload().moveFileToAssetstore(attached_file, user, assetstore))
+
+    for item in child_items:
+        setResponseTimeLimit(86400)
+        for file in File().find({'itemId': ObjectId(item['_id']), **unique_clause}):
+            results.append(Upload().moveFileToAssetstore(file, user, assetstore))
+
+    for child_folder in child_folders:
+        results += moveLeafFiles(child_folder, user, assetstore)
+
+    return results
+
+
 @access.admin
 @boundHandler
 @autoDescribeRoute(
@@ -98,3 +133,14 @@ def listAllImports(self, unique, limit, offset, sort):
     return getImports(
         None,
         self.getCurrentUser(), unique, limit, offset, sort)
+
+
+@access.admin
+@boundHandler
+@autoDescribeRoute(
+    Description('Move folder contents to an assetstore.')
+    .modelParam('id', 'Source folder ID', model=Folder, level=AccessType.WRITE)
+    .modelParam('assetstoreId', 'Destination assetstore ID', model=Assetstore, paramType='formData')
+)
+def moveFolder(self, folder, assetstore):
+    return moveLeafFiles(folder, self.getCurrentUser(), assetstore)

@@ -12,7 +12,7 @@ from girder_jobs.constants import JobStatus
 from girder_jobs.models.job import Job
 
 from import_tracker.models import AssetstoreImport
-from import_tracker.rest import listAllImports, listImports
+from import_tracker.rest import listAllImports, listImports, moveFolder
 
 
 class ImportTrackerCancelError(Exception):
@@ -176,3 +176,5 @@ class GirderPlugin(plugin.GirderPlugin):
         info['apiRoot'].assetstore.route('GET', ('all_imports',), listAllImports)
         wrapShouldImportFile()
         wrapImportData(info['apiRoot'].assetstore)
+
+        info['apiRoot'].folder.route('PUT', (':id', 'move'), moveFolder)
