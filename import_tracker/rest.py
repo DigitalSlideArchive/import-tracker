@@ -10,6 +10,7 @@ from girder.models.folder import Folder
 from girder.models.item import Item
 from girder.models.upload import Upload
 from girder.utility import model_importer, path
+from girder.utility.progress import setResponseTimeLimit
 
 from .models import AssetstoreImport
 
@@ -91,9 +92,11 @@ def moveLeafFiles(folder, user, assetstore):
         'attachedToId': folder_item['_id'],
         **unique_clause
     }):
+        setResponseTimeLimit(86400)
         results.append(Upload().moveFileToAssetstore(attached_file, user, assetstore))
 
     for item in child_items:
+        setResponseTimeLimit(86400)
         for file in File().find({'itemId': ObjectId(item['_id']), **unique_clause}):
             results.append(Upload().moveFileToAssetstore(file, user, assetstore))
 
