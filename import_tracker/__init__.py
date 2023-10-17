@@ -162,6 +162,84 @@ def wrapShouldImportFile():
     AbstractAssetstoreAdapter.shouldImportFile = shouldImportFileWrapper
 
 
+def wrapDICOMImport(assetstoreResource):
+    baseImportData = assetstoreResource.importData
+    baseImportData.description.param(
+        'excludeExisting',
+        'If true, then a file with an import path that is already in the '
+        'system is not imported, even if it is not in the destination '
+        'hierarchy.', dataType='boolean', required=False, default=False)
+
+    @boundHandler(ctx=assetstoreResource)
+    @autoDescribeRoute(baseImportData.description)
+    def dwaImportDataWrapper(self, assetstore, destinationId, destinationType, filters,
+                             progress, excludeExisting):
+
+        user = self.getCurrentUser()
+        params = {
+            'destinationId': destinationId,
+            'destinationType': destinationType,
+            'filters': filters,
+            'progress': str(progress).lower(),
+        }
+        if excludeExisting:
+            params['excludeExisting'] = str(excludeExisting).lower()
+
+        importRecord = AssetstoreImport().createAssetstoreImport(assetstore, params)
+        job = Job().createJob(
+            title=f'Import from {assetstore["name"]}',
+            type='assetstore_import',
+            public=False,
+            user=user,
+            kwargs=params,
+        )
+        job = Job().updateJob(job, '%s - Starting import from %s\n' % (
+            time.strftime('%Y-%m-%d %H:%M:%S'),
+            assetstore['name']
+        ), status=JobStatus.RUNNING)
+
+        try:
+            with ProgressContext(progress, user=user, title='Importing data') as ctx:
+                try:
+                    jobRec = {
+                        'id': str(job['_id']),
+                        'count': 0,
+                        'skip': 0,
+                        'lastlog': time.time(),
+                        'logcount': 0,
+                    }
+                    self._importData(assetstore, params={**params, '_job': jobRec})
+
+                    success = True
+                    Job().updateJob(job, '%s - Finished.  Checked %d, skipped %d\n' % (
+                        time.strftime('%Y-%m-%d %H:%M:%S'),
+                        jobRec['count'], jobRec['skip'],
+                    ), status=JobStatus.SUCCESS)
+
+                except ImportTrackerCancelError:
+                    Job().updateJob(job, '%s - Canceled' % (
+                        time.strftime('%Y-%m-%d %H:%M:%S'),
+                    ))
+                    success = 'canceled'
+
+        except Exception as exc:
+            Job().updateJob(job, '%s - Failed with %s\n' % (
+                time.strftime('%Y-%m-%d %H:%M:%S'),
+                exc,
+            ), status=JobStatus.ERROR)
+            success = False
+
+        importRecord = AssetstoreImport().markEnded(importRecord, success)
+        return importRecord
+
+    for key in {'accessLevel', 'description', 'requiredScopes'}:
+        setattr(dwaImportDataWrapper, key, getattr(baseImportData, key))
+
+    assetstoreResource.importData = dwaImportDataWrapper
+    assetstoreResource.removeRoute('POST', (':id', 'import'))
+    assetstoreResource.route('POST', (':id', 'import'), assetstoreResource.importData)
+
+
 class GirderPlugin(plugin.GirderPlugin):
     DISPLAY_NAME = 'import_tracker'
     CLIENT_SOURCE_PATH = 'web_client'
@@ -178,3 +256,8 @@ class GirderPlugin(plugin.GirderPlugin):
         wrapImportData(info['apiRoot'].assetstore)
 
         info['apiRoot'].folder.route('PUT', (':id', 'move'), moveFolder)
+
+        if hasattr(info['apiRoot'], 'dicomweb_assetstore'):
+            wrapDICOMImport(info['apiRoot'].dicomweb_assetstore)
+        else:
+            print("dicomweb_assetstore not found, correct large_image version may not be loaded")

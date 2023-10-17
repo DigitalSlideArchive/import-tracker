@@ -76,9 +76,8 @@ table.g-imports-list-table
           span= _import._assetstoreName
         td(data-id=_import.params.importPath, data-toggle='tooltip', title=_import.params.importPath)
           span= _import.params.importPath
-        //-
-          td
-            span= _import.params.destinationType
+        td
+          span= _import.params.destinationType
         td(data-id=_import.params.destinationId, data-toggle='tooltip', title=_import._destinationPath + '\n' + _import.params.destinationId)
           span= _import._destinationPath
         if anyLeafed
