@@ -21,7 +21,8 @@ table.g-imports-list-table
   -
     var anyRegex = false;
     var anyLeafed = false;
-    var anyNoProgress;
+    var anyImportPath = false;
+    var anyNoProgress = false;
     var otherParams = [];
     var showCount = false;
   for _import in imports
@@ -31,9 +32,11 @@ table.g-imports-list-table
       - anyLeafed = true
     if !_import.params.progress
       - anyNoProgress = true
-    - Object.keys(_import.params).forEach((key) => { if (['importPath', 'destinationId', 'destinationType', 'leafFoldersAsItems', 'progress', 'fileIncludeRegex', 'fileExcludeRegex'].indexOf(key) < 0 && otherParams.indexOf(key) < 0) { otherParams.push(key); } });
+    - Object.keys(_import.params).forEach((key) => { if (['importPath', 'destinationId', 'leafFoldersAsItems', 'progress', 'fileIncludeRegex', 'fileExcludeRegex'].indexOf(key) < 0 && otherParams.indexOf(key) < 0) { otherParams.push(key); } });
     if _import._count
-      - showCount = true;
+      - showCount = true
+    if _import.params.importPath
+      - anyImportPath = true
   thead
     tr
       th Actions
@@ -42,7 +45,8 @@ table.g-imports-list-table
       th Started
       th Ended
       th Assetstore Name
-      th Import Path
+      if anyImportPath
+        th Import Path
       //- th Destination Type
       th Destination Path
       if anyLeafed
@@ -59,11 +63,11 @@ table.g-imports-list-table
       tr
         td
           if assetstoreExists[i]
-            div(style='display: flex; justify-content: flex-end;')
+            div(style='display: flex; padding-left: 10px; padding-right: 10px;')
               button.re-import-btn.btn.btn-sm.btn-success(index=i, disabled=(_import._destinationPath =='does not exist'))
                 i.icon-cw
                 |  Re-Import
-              button.re-import-edit-btn.btn.btn-sm.btn-primary(index=i, style='margin-left: 5px;', data-toggle='tooltip', title='Edit Import Parameters')
+              button.re-import-edit-btn.btn.btn-sm.btn-primary(index=i, style='margin-left: 1em;', data-toggle='tooltip', title='Edit Import Parameters')
                 i.icon-pencil
         if showCount
           td(data-id=_import._count, data-toggle='tooltip', title=_import._count !== 1 ? `Imported ${_import._count} times` : 'Imported once')
@@ -74,10 +78,9 @@ table.g-imports-list-table
           span= _import.ended ? moment(_import.ended).format('YYYY-MM-DD HH:mm:ss.SSS') : ''
         td(data-id=_import._assetstoreName, data-toggle='tooltip', title=_import._assetstoreName)
           span= _import._assetstoreName
-        td(data-id=_import.params.importPath, data-toggle='tooltip', title=_import.params.importPath)
-          span= _import.params.importPath
-        td
-          span= _import.params.destinationType
+        if anyImportPath
+          td(data-id=_import.params.importPath, data-toggle='tooltip', title=_import.params.importPath)
+            span= _import.params.importPath
         td(data-id=_import.params.destinationId, data-toggle='tooltip', title=_import._destinationPath + '\n' + _import.params.destinationId)
           span= _import._destinationPath
         if anyLeafed
