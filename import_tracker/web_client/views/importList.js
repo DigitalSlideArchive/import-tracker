@@ -2,6 +2,7 @@ import $ from 'jquery';
 import moment from 'moment';
 
 import AssetstoreModel from '@girder/core/models/AssetstoreModel';
+import { AssetstoreType } from '@girder/core/constants';
 import View from '@girder/core/views/View';
 import router from '@girder/core/router';
 import { restRequest } from '@girder/core/rest';
@@ -22,11 +23,20 @@ var importList = View.extend({
             const assetstore = new AssetstoreModel({ _id: importEvent.assetstoreId });
             const destType = importEvent.params.destinationType;
             const destId = importEvent.params.destinationId;
+
             assetstore.off('g:imported').on('g:imported', function () {
                 router.navigate(destType + '/' + destId, { trigger: true });
             }, this).on('g:error', function (resp) {
                 this.$('.g-validation-failed-message').text(resp.responseJSON.message);
-            }, this).import(importEvent.params);
+            }, this);
+
+            assetstore.once('g:fetched', () => {
+                if (assetstore.get('type') === AssetstoreType.DICOMWEB) {
+                    assetstore.dicomwebImport(importEvent.params);
+                } else {
+                    assetstore.import(importEvent.params);
+                }
+            }).fetch();
         },
         'click .re-import-edit-btn': function (e) {
             const index = Number($(e.currentTarget).attr('index'));
