@@ -45,10 +45,24 @@ var importList = View.extend({
                 return;
             }
 
+            // Navigate to re-import page
+            const navigate = (assetstoreId, importId) => {
+                const assetstore = new AssetstoreModel({ _id: assetstoreId });
+                assetstore.once('g:fetched', () => {
+                    if (assetstore.get('type') === AssetstoreType.DICOMWEB) {
+                        // Avoid adding previous import data for DICOMweb imports by navigating to blank import
+                        // TODO: Add DICOMweb-specific re-import view
+                        router.navigate(`dicomweb_assetstore/${assetstoreId}/import`, { trigger: true });
+                    } else {
+                        router.navigate(`assetstore/${assetstoreId}/re-import/${importId}`, { trigger: true });
+                    }
+                }).fetch();
+            };
+
             const assetstoreId = importEvent.assetstoreId;
-            const importId = importEvent._id;
+            const importId = importEvent._id; // Only individual imports have an _id
             if (importId) {
-                router.navigate(`assetstore/${assetstoreId}/re-import/${importId}`, { trigger: true });
+                navigate(assetstoreId, importId);
                 return;
             }
 
@@ -63,7 +77,7 @@ var importList = View.extend({
                     i.params.destinationType === importEvent.params.destinationType
                 )[0]._id;
 
-                router.navigate(`assetstore/${assetstoreId}/re-import/${importId}`, { trigger: true });
+                navigate(assetstoreId, importId);
             });
         }
     },
