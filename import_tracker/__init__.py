@@ -1,6 +1,6 @@
 import time
 
-from girder import plugin
+from girder import logger, plugin
 from girder.api.describe import autoDescribeRoute
 from girder.api.rest import boundHandler
 from girder.constants import AccessType
@@ -208,7 +208,12 @@ def wrapDICOMImport(assetstoreResource):
                         'lastlog': time.time(),
                         'logcount': 0,
                     }
-                    self._importData(assetstore, params={**params, '_job': jobRec})
+                    self._importData(
+                        assetstore,
+                        params={
+                            **params,
+                            '_job': jobRec},
+                        progress=ctx)
 
                     success = True
                     Job().updateJob(job, '%s - Finished.  Checked %d, skipped %d\n' % (
@@ -260,4 +265,4 @@ class GirderPlugin(plugin.GirderPlugin):
         if hasattr(info['apiRoot'], 'dicomweb_assetstore'):
             wrapDICOMImport(info['apiRoot'].dicomweb_assetstore)
         else:
-            print("dicomweb_assetstore not found, correct large_image version may not be loaded")
+            logger.info('dicomweb_assetstore not found')
