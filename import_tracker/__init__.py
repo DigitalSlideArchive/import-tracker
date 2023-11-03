@@ -11,12 +11,8 @@ from girder.utility.progress import ProgressContext
 from girder_jobs.constants import JobStatus
 from girder_jobs.models.job import Job
 
-from import_tracker.models import AssetstoreImport
+from import_tracker.models import AssetstoreImport, ImportTrackerCancelError
 from import_tracker.rest import listAllImports, listImports, moveFolder
-
-
-class ImportTrackerCancelError(Exception):
-    pass
 
 
 def wrapImportData(assetstoreResource):

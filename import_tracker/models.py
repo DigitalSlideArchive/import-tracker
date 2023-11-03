@@ -38,3 +38,7 @@ class AssetstoreImport(Model):
             record['success'] = success
         record = self.save(record)
         return record
+
+
+class ImportTrackerCancelError(Exception):
+    pass
