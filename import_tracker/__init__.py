@@ -251,6 +251,11 @@ class GirderPlugin(plugin.GirderPlugin):
 
     def load(self, info):
         plugin.getPlugin('jobs').load(info)
+        try:
+            import large_image_source_dicom  # noqa
+            plugin.getPlugin('dicomweb').load(info)
+        except ImportError:
+            pass
         ModelImporter.registerModel(
             'assetstoreImport', AssetstoreImport, 'import_tracker'
         )
