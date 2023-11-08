@@ -36,7 +36,7 @@ wrap(AssetstoreView, 'render', function (render) {
             function () {
                 // we can't just use the index of the after call, since not
                 // all assetstores will have import buttons.
-                var assetstore = assetstores.get($(this).closest('.g-assetstore-buttons').find('[cid]').attr('cid'));
+                const assetstore = assetstores.get($(this).closest('.g-assetstore-buttons').find('[cid]').attr('cid'));
                 return importDataButton({ importsPageLink: `#assetstore/${assetstore.id}/imports` });
             }
         );
