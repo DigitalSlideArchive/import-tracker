@@ -2,6 +2,7 @@ import $ from 'jquery';
 import moment from 'moment';
 
 import AssetstoreModel from '@girder/core/models/AssetstoreModel';
+import { AssetstoreType } from '@girder/core/constants';
 import View from '@girder/core/views/View';
 import router from '@girder/core/router';
 import { restRequest } from '@girder/core/rest';
@@ -22,11 +23,20 @@ var importList = View.extend({
             const assetstore = new AssetstoreModel({ _id: importEvent.assetstoreId });
             const destType = importEvent.params.destinationType;
             const destId = importEvent.params.destinationId;
+
             assetstore.off('g:imported').on('g:imported', function () {
                 router.navigate(destType + '/' + destId, { trigger: true });
             }, this).on('g:error', function (resp) {
                 this.$('.g-validation-failed-message').text(resp.responseJSON.message);
-            }, this).import(importEvent.params);
+            }, this);
+
+            assetstore.once('g:fetched', () => {
+                if (assetstore.get('type') === AssetstoreType.DICOMWEB) {
+                    assetstore.dicomwebImport(importEvent.params);
+                } else {
+                    assetstore.import(importEvent.params);
+                }
+            }).fetch();
         },
         'click .re-import-edit-btn': function (e) {
             const index = Number($(e.currentTarget).attr('index'));
@@ -35,10 +45,24 @@ var importList = View.extend({
                 return;
             }
 
+            // Navigate to re-import page
+            const navigate = (assetstoreId, importId) => {
+                const assetstore = new AssetstoreModel({ _id: assetstoreId });
+                assetstore.once('g:fetched', () => {
+                    if (assetstore.get('type') === AssetstoreType.DICOMWEB) {
+                        // Avoid adding previous import data for DICOMweb imports by navigating to blank import
+                        // TODO: Add DICOMweb-specific re-import view
+                        router.navigate(`dicomweb_assetstore/${assetstoreId}/import`, { trigger: true });
+                    } else {
+                        router.navigate(`assetstore/${assetstoreId}/re-import/${importId}`, { trigger: true });
+                    }
+                }).fetch();
+            };
+
             const assetstoreId = importEvent.assetstoreId;
-            const importId = importEvent._id;
+            const importId = importEvent._id; // Only individual imports have an _id
             if (importId) {
-                router.navigate(`assetstore/${assetstoreId}/re-import/${importId}`, { trigger: true });
+                navigate(assetstoreId, importId);
                 return;
             }
 
@@ -53,7 +77,7 @@ var importList = View.extend({
                     i.params.destinationType === importEvent.params.destinationType
                 )[0]._id;
 
-                router.navigate(`assetstore/${assetstoreId}/re-import/${importId}`, { trigger: true });
+                navigate(assetstoreId, importId);
             });
         }
     },

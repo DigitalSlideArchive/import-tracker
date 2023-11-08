@@ -1,3 +1,5 @@
+import $ from 'jquery';
+
 import AssetstoreView from '@girder/core/views/body/AssetstoresView';
 import FilesystemImportView from '@girder/core/views/body/FilesystemImportView';
 import S3ImportView from '@girder/core/views/body/S3ImportView';
@@ -22,16 +24,23 @@ import './JobStatus';
 wrap(AssetstoreView, 'render', function (render) {
     // Call the underlying render function that we are wrapping
     render.call(this);
+    // defer adding buttons so optional plugins can render first.
+    window.setTimeout(() => {
+        this.$el.find('.g-current-assetstores-container .g-body-title').after(
+            '<a class="g-view-imports btn btn-sm btn-primary" href="#assetstore/all_imports"><i class="icon-link-ext"></i>View all past Imports</a>'
+        );
 
-    this.$el.find('.g-current-assetstores-container .g-body-title').after(
-        '<a class="g-view-imports btn btn-sm btn-primary" href="#assetstore/all_imports"><i class="icon-link-ext"></i>View all past Imports</a>'
-    );
-
-    // Inject new button into each assetstore
-    const assetstores = this.collection.toArray();
-    this.$('.g-assetstore-import-button-container').after(
-        (i) => importDataButton({ importsPageLink: `#assetstore/${assetstores[i].id}/imports` })
-    );
+        // Inject new button into each assetstore
+        const assetstores = this.collection;
+        this.$('.g-assetstore-import-button-container').after(
+            function () {
+                // we can't just use the index of the after call, since not
+                // all assetstores will have import buttons.
+                const assetstore = assetstores.get($(this).closest('.g-assetstore-buttons').find('[cid]').attr('cid'));
+                return importDataButton({ importsPageLink: `#assetstore/${assetstore.id}/imports` });
+            }
+        );
+    }, 0);
 });
 
 // Add duplicate_files option to Import Asset form
