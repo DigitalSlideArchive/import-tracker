@@ -254,7 +254,7 @@ class GirderPlugin(plugin.GirderPlugin):
         try:
             import large_image_source_dicom  # noqa
             plugin.getPlugin('dicomweb').load(info)
-        except ImportError:
+        except (ImportError, AttributeError):
             pass
         ModelImporter.registerModel(
             'assetstoreImport', AssetstoreImport, 'import_tracker'
