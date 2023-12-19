@@ -82,6 +82,7 @@ def getImports(query=None, user=None, unique=False, limit=None, offset=None, sor
 
 
 def moveLeafFiles(folder, user, assetstore, progress, job):
+    job = Job().load(job['_id'], force=True)
     if job['status'] == JobStatus.CANCELED:
         raise ImportTrackerCancelError()
 
@@ -109,6 +110,9 @@ def moveLeafFiles(folder, user, assetstore, progress, job):
     for item in child_items:
         setResponseTimeLimit(86400)
         for file in File().find({'itemId': ObjectId(item['_id']), **unique_clause}):
+            message = f'Moving {folder["name"]}/{file["name"]}\n'
+            job = Job().updateJob(job, log=f'{time.strftime("%Y-%m-%d %H:%M:%S")} - {message}',
+                                  progressMessage=message, status=JobStatus.RUNNING)
             results.append(Upload().moveFileToAssetstore(file, user, assetstore,
                                                          progress=progress))
 
@@ -159,16 +163,11 @@ def listAllImports(self, unique, limit, offset, sort):
 def moveFolder(self, folder, assetstore, progress):
     user = self.getCurrentUser()
     job = Job().createJob(
-        title='Move folder %s (%s) to assetstore %s' % (
-            folder['name'], folder['_id'], {assetstore['name']}
-        ),
-        type='folder_move',
-        public=False,
-        user=user,
+        title='Move folder "%s" to assetstore "%s"' % (folder['name'], assetstore['name']),
+        type='folder_move', public=False, user=user,
     )
-    job = Job().updateJob(job, '%s - Starting folder move %s to assetstore %s\n' % (
-        time.strftime('%Y-%m-%d %H:%M:%S'),
-        folder['name'], assetstore['name'],
+    job = Job().updateJob(job, '%s - Starting folder move "%s" to assetstore "%s" (%s)\n' % (
+        time.strftime('%Y-%m-%d %H:%M:%S'), folder['name'], assetstore['name'], assetstore['_id']
     ), status=JobStatus.RUNNING)
 
     result = None
@@ -185,6 +184,8 @@ def moveFolder(self, folder, assetstore, progress):
                 Job().updateJob(job, '%s - Finished folder move.\n' % (
                     time.strftime('%Y-%m-%d %H:%M:%S'),
                 ), status=JobStatus.SUCCESS)
+
+                Job().save(job)
 
             except ImportTrackerCancelError:
                 Job().updateJob(job, '%s - Canceled' % (
