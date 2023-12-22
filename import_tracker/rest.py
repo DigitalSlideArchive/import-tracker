@@ -88,7 +88,9 @@ def moveLeafFiles(folder, user, assetstore, progress, job):
 
     Folder().updateFolder(folder)
 
+    # only move files that are not already in the assetstore
     unique_clause = {'assetstoreId': {'$ne': ObjectId(assetstore['_id'])}}
+
     folder_item = Item().findOne({
         'folderId': folder['_id'],
     })
@@ -98,28 +100,35 @@ def moveLeafFiles(folder, user, assetstore, progress, job):
     child_folders = Folder().childFolders(folder, 'folder', user=user)
     child_items = Folder().childItems(folder, filters=unique_clause)
 
-    results = []
-    for attached_file in File().find({
-        'attachedToId': folder_item['_id'],
-        **unique_clause
-    }):
-        setResponseTimeLimit(86400)
-        results.append(Upload().moveFileToAssetstore(attached_file, user, assetstore,
-                                                     progress=progress))
+    # get all files attached to an object
+    def getAttached(attachedToId):
+        uploads = []
+        for attached_file in File().find({'attachedToId': attachedToId, **unique_clause}):
+            setResponseTimeLimit(86400)
+            upload = Upload().moveFileToAssetstore(attached_file, user, assetstore,
+                                                   progress=progress)
+            uploads.append(upload)
+        return uploads
+
+    # upload all files attached to the current folder
+    uploads = getAttached(folder_item['_id'])
 
     for item in child_items:
+        # upload all attached files for each item
+        uploads += getAttached(item['_id'])
+
         setResponseTimeLimit(86400)
         for file in File().find({'itemId': ObjectId(item['_id']), **unique_clause}):
             message = f'Moving {folder["name"]}/{file["name"]}\n'
             job = Job().updateJob(job, log=f'{time.strftime("%Y-%m-%d %H:%M:%S")} - {message}',
                                   progressMessage=message, status=JobStatus.RUNNING)
-            results.append(Upload().moveFileToAssetstore(file, user, assetstore,
+            uploads.append(Upload().moveFileToAssetstore(file, user, assetstore,
                                                          progress=progress))
 
     for child_folder in child_folders:
-        results += moveLeafFiles(child_folder, user, assetstore, progress, job)
+        uploads += moveLeafFiles(child_folder, user, assetstore, progress, job)
 
-    return results
+    return uploads
 
 
 @access.admin
