@@ -81,7 +81,22 @@ def getImports(query=None, user=None, unique=False, limit=None, offset=None, sor
     return processCursor(cursor, user)
 
 
+def moveFile(file, folder, user, assetstore, progress, job):
+    # check if the move has been canceled
+    job = Job().load(job['_id'], force=True)
+    if job['status'] == JobStatus.CANCELED:
+        raise ImportTrackerCancelError()
+
+    message = f'Moving {folder["name"]}/{file["name"]}\n'
+    job = Job().updateJob(job, log=f'{time.strftime("%Y-%m-%d %H:%M:%S")} - {message}')
+    progress.update(message=message)
+
+    setResponseTimeLimit(86400)
+    return Upload().moveFileToAssetstore(file, user, assetstore, progress=progress)
+
+
 def moveLeafFiles(folder, user, assetstore, progress, job):
+    # check if the move has been canceled
     job = Job().load(job['_id'], force=True)
     if job['status'] == JobStatus.CANCELED:
         raise ImportTrackerCancelError()
@@ -104,9 +119,7 @@ def moveLeafFiles(folder, user, assetstore, progress, job):
     def getAttached(attachedToId):
         uploads = []
         for attached_file in File().find({'attachedToId': attachedToId, **unique_clause}):
-            setResponseTimeLimit(86400)
-            upload = Upload().moveFileToAssetstore(attached_file, user, assetstore,
-                                                   progress=progress)
+            upload = moveFile(attached_file, folder, user, assetstore, progress, job)
             uploads.append(upload)
         return uploads
 
@@ -117,13 +130,9 @@ def moveLeafFiles(folder, user, assetstore, progress, job):
         # upload all attached files for each item
         uploads += getAttached(item['_id'])
 
-        setResponseTimeLimit(86400)
         for file in File().find({'itemId': ObjectId(item['_id']), **unique_clause}):
-            message = f'Moving {folder["name"]}/{file["name"]}\n'
-            job = Job().updateJob(job, log=f'{time.strftime("%Y-%m-%d %H:%M:%S")} - {message}',
-                                  progressMessage=message, status=JobStatus.RUNNING)
-            uploads.append(Upload().moveFileToAssetstore(file, user, assetstore,
-                                                         progress=progress))
+            upload = moveFile(file, folder, user, assetstore, progress, job)
+            uploads.append(upload)
 
     for child_folder in child_folders:
         uploads += moveLeafFiles(child_folder, user, assetstore, progress, job)
@@ -197,9 +206,7 @@ def moveFolder(self, folder, assetstore, progress):
                 Job().save(job)
 
             except ImportTrackerCancelError:
-                Job().updateJob(job, '%s - Canceled' % (
-                    time.strftime('%Y-%m-%d %H:%M:%S'),
-                ))
+                return 'Job canceled'
 
     except Exception as exc:
         Job().updateJob(job, '%s - Failed with %s\n' % (
