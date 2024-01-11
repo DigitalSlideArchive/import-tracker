@@ -203,8 +203,6 @@ def moveFolder(self, folder, assetstore, progress):
                     time.strftime('%Y-%m-%d %H:%M:%S'),
                 ), status=JobStatus.SUCCESS)
 
-                Job().save(job)
-
             except ImportTrackerCancelError:
                 return 'Job canceled'
 
