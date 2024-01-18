@@ -63,11 +63,11 @@ table.g-imports-list-table
       tr
         td
           if assetstoreExists[i]
-            div(style='display: flex; padding-left: 10px; padding-right: 10px;')
+            .g-imports-buttons
               button.re-import-btn.btn.btn-sm.btn-success(index=i, disabled=(_import._destinationPath =='does not exist'))
                 i.icon-cw
                 |  Re-Import
-              button.re-import-edit-btn.btn.btn-sm.btn-primary(index=i, style='margin-left: 1em;', data-toggle='tooltip', title='Edit Import Parameters')
+              button.re-import-edit-btn.btn.btn-sm.btn-primary(index=i, data-toggle='tooltip', title='Edit Import Parameters')
                 i.icon-pencil
         if showCount
           td(data-id=_import._count, data-toggle='tooltip', title=_import._count !== 1 ? `Imported ${_import._count} times` : 'Imported once')
