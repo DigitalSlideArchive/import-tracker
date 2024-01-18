@@ -94,6 +94,7 @@ def moveFile(file, folder, user, assetstore, progress, job):
     setResponseTimeLimit(86400)
     return Upload().moveFileToAssetstore(file, user, assetstore, progress=progress)
 
+
 def moveLeafFiles(folder, user, assetstore, ignoreImported, progress, job):
     # check if the move has been canceled
     job = Job().load(job['_id'], force=True)
@@ -138,7 +139,8 @@ def moveLeafFiles(folder, user, assetstore, ignoreImported, progress, job):
             uploads.append(upload)
 
     for child_folder in child_folders:
-        uploads += moveLeafFiles(child_folder, user, assetstore, ignoreImported, progress, job)
+        uploads += moveLeafFiles(child_folder, user, assetstore,
+                                 ignoreImported, progress, job)
 
     return uploads
 
@@ -186,11 +188,13 @@ def listAllImports(self, unique, limit, offset, sort):
 def moveFolder(self, folder, assetstore, ignoreImported, progress):
     user = self.getCurrentUser()
     job = Job().createJob(
-        title='Move folder "%s" to assetstore "%s"' % (folder['name'], assetstore['name']),
+        title='Move folder "%s" to assetstore "%s"' % (
+            folder['name'], assetstore['name']),
         type='folder_move', public=False, user=user,
     )
     job = Job().updateJob(job, '%s - Starting folder move "%s" to assetstore "%s" (%s)\n' % (
-        time.strftime('%Y-%m-%d %H:%M:%S'), folder['name'], assetstore['name'], assetstore['_id']
+        time.strftime(
+            '%Y-%m-%d %H:%M:%S'), folder['name'], assetstore['name'], assetstore['_id']
     ), status=JobStatus.RUNNING)
 
     result = None
@@ -202,7 +206,8 @@ def moveFolder(self, folder, assetstore, ignoreImported, progress):
                                  assetstore['name'],
                                  assetstore['_id'])) as ctx:
             try:
-                result = moveLeafFiles(folder, user, assetstore, ignoreImported, ctx, job)
+                result = moveLeafFiles(
+                    folder, user, assetstore, ignoreImported, ctx, job)
 
                 Job().updateJob(job, '%s - Finished folder move.\n' % (
                     time.strftime('%Y-%m-%d %H:%M:%S'),
