@@ -40,7 +40,7 @@ var reImportView = View.extend({
                 icon: 'cancel',
                 text: 'Unable to fetch base import information. Redirected to empty import page',
                 type: 'danger'
-            })
+            });
             goBack(this.assetstoreId);
         });
     },
