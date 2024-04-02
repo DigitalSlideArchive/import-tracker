@@ -173,6 +173,16 @@ def listAllImports(self, unique, limit, offset, sort):
 @access.admin
 @boundHandler
 @autoDescribeRoute(
+    Description('Get import for record from ID.')
+    .modelParam('id', 'ID of an import', model=AssetstoreImport)
+)
+def getImport(self, assetstoreImport):
+    return assetstoreImport
+
+
+@access.admin
+@boundHandler
+@autoDescribeRoute(
     Description('Move folder contents to an assetstore.')
     .modelParam('id', 'Source folder ID', model=Folder, level=AccessType.WRITE)
     .modelParam('assetstoreId', 'Destination assetstore ID', model=Assetstore, paramType='formData')

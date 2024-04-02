@@ -12,7 +12,7 @@ from girder_jobs.constants import JobStatus
 from girder_jobs.models.job import Job
 
 from import_tracker.models import AssetstoreImport, ImportTrackerCancelError
-from import_tracker.rest import listAllImports, listImports, moveFolder
+from import_tracker.rest import listAllImports, listImports, getImport, moveFolder
 
 
 def wrapImportData(assetstoreResource):
@@ -258,6 +258,7 @@ class GirderPlugin(plugin.GirderPlugin):
 
         info['apiRoot'].assetstore.route('GET', (':id', 'imports'), listImports)
         info['apiRoot'].assetstore.route('GET', ('all_imports',), listAllImports)
+        info['apiRoot'].assetstore.route('GET', ('import', ':id'), getImport)
         wrapShouldImportFile()
         wrapImportData(info['apiRoot'].assetstore)
 
