@@ -12,7 +12,7 @@ from girder_jobs.constants import JobStatus
 from girder_jobs.models.job import Job
 
 from import_tracker.models import AssetstoreImport, ImportTrackerCancelError
-from import_tracker.rest import listAllImports, listImports, getImport, moveFolder
+from import_tracker.rest import getImport, listAllImports, listImports, moveFolder
 
 
 def wrapImportData(assetstoreResource):
