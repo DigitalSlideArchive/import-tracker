@@ -64,7 +64,8 @@ def getImports(query=None, user=None, unique=False, limit=None, offset=None, sor
                 },
                 '_count': {'$sum': 1},
                 'started': {'$first': '$started'},
-                'ended': {'$first': '$ended'}
+                'ended': {'$first': '$ended'},
+                'first_id': {'$first': '$_id'},
             }},
             {'$project': {
                 'assetstoreId': '$_id.assetstoreId',
@@ -72,7 +73,7 @@ def getImports(query=None, user=None, unique=False, limit=None, offset=None, sor
                 '_count': '$_count',
                 'started': '$started',
                 'ended': '$ended',
-                '_id': None
+                '_id': '$first_id',
             }},
             {'$sort': {k: v for k, v in sort}},
             {'$skip': offset or 0},

@@ -61,24 +61,7 @@ var importList = View.extend({
 
             const assetstoreId = importEvent.assetstoreId;
             const importId = importEvent._id; // Only individual imports have an _id
-            if (importId) {
-                navigate(assetstoreId, importId);
-                return;
-            }
-
-            // If the importEvent aggregated 'unique' imports, we need to find a matching importId
-            restRequest({
-                url: `assetstore/${assetstoreId}/imports`,
-                data: { unique: false }
-            }).done((results) => {
-                const importId = results.filter((i) =>
-                    i.params.importPath === importEvent.params.importPath &&
-                    i.params.destinationId === importEvent.params.destinationId &&
-                    i.params.destinationType === importEvent.params.destinationType
-                )[0]._id;
-
-                navigate(assetstoreId, importId);
-            });
+            navigate(assetstoreId, importId);
         }
     },
 
