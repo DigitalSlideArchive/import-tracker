@@ -19,7 +19,7 @@ var reImportView = View.extend({
 
         restRequest({
             url: `assetstore/${assetstoreId}/imports`,
-            data: { unique: false }
+            data: { unique: false, limit: 0 }
         }).done((imports) => {
             if (imports === undefined || imports.length === 0) {
                 goBack(this.assetstoreId);
