@@ -57,7 +57,7 @@ table.g-imports-list-table
         th File Include Regex
         th File Exclude Regex
       for key in otherParams
-        th= key
+        th= key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())
   tbody
     each _import, i in imports
       tr
@@ -80,9 +80,9 @@ table.g-imports-list-table
           span= _import.get('_assetstoreName')
         if anyImportPath
           td(data-id=_import.get('params').importPath, data-toggle='tooltip', title=_import.get('params').importPath)
-            span= _import.get('params').importPath
+            span= (_import.get('params').importPath || '').replaceAll(/(?!^)\//g, '/\u00AD')
         td(data-id=_import.get('params').destinationId, data-toggle='tooltip', title=_import.get('_destinationPath') + '\n' + _import.get('params').destinationId)
-          span= _import.get('_destinationPath')
+          span= (_import.get('_destinationPath') || '').replaceAll(/(?!^)\//g, '/\u00AD')
         if anyLeafed
           td
             span= _import.get('params').leafFoldersAsItems
