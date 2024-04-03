@@ -28,7 +28,7 @@ wrap(AssetstoreView, 'render', function (render) {
     // defer adding buttons so optional plugins can render first.
     window.setTimeout(() => {
         this.$el.find('.g-current-assetstores-container .g-body-title').after(
-            '<a class="g-view-imports btn btn-sm btn-primary" href="#assetstore/all_imports"><i class="icon-link-ext"></i>View all past Imports</a>'
+            '<a class="g-view-imports btn btn-sm btn-primary" href="#assetstore/all_unique_imports"><i class="icon-link-ext"></i>View all past Imports</a>'
         );
 
         // Inject new button into each assetstore
@@ -38,7 +38,7 @@ wrap(AssetstoreView, 'render', function (render) {
                 // we can't just use the index of the after call, since not
                 // all assetstores will have import buttons.
                 const assetstore = assetstores.get($(this).closest('.g-assetstore-buttons').find('[cid]').attr('cid'));
-                return importDataButton({ importsPageLink: `#assetstore/${assetstore.id}/imports` });
+                return importDataButton({ importsPageLink: `#assetstore/${assetstore.id}/unique_imports` });
             }
         );
     }, 0);

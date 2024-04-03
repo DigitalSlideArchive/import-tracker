@@ -11,12 +11,8 @@ from girder.utility.progress import ProgressContext
 from girder_jobs.constants import JobStatus
 from girder_jobs.models.job import Job
 
-from import_tracker.models import AssetstoreImport
-from import_tracker.rest import listAllImports, listImports, moveFolder
-
-
-class ImportTrackerCancelError(Exception):
-    pass
+from import_tracker.models import AssetstoreImport, ImportTrackerCancelError
+from import_tracker.rest import getImport, listAllImports, listImports, moveFolder
 
 
 def wrapImportData(assetstoreResource):
@@ -254,7 +250,7 @@ class GirderPlugin(plugin.GirderPlugin):
         try:
             import large_image_source_dicom  # noqa
             plugin.getPlugin('dicomweb').load(info)
-        except ImportError:
+        except (ImportError, AttributeError):
             pass
         ModelImporter.registerModel(
             'assetstoreImport', AssetstoreImport, 'import_tracker'
@@ -262,6 +258,7 @@ class GirderPlugin(plugin.GirderPlugin):
 
         info['apiRoot'].assetstore.route('GET', (':id', 'imports'), listImports)
         info['apiRoot'].assetstore.route('GET', ('all_imports',), listAllImports)
+        info['apiRoot'].assetstore.route('GET', ('import', ':id'), getImport)
         wrapShouldImportFile()
         wrapImportData(info['apiRoot'].assetstore)
 

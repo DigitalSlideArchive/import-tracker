@@ -2,6 +2,7 @@ import AssetstoreModel from '@girder/core/models/AssetstoreModel';
 import View from '@girder/core/views/View';
 
 import router from '@girder/core/router';
+import events from '@girder/core/events';
 import { restRequest } from '@girder/core/rest';
 
 const goBack = (assetstoreId) => {
@@ -18,19 +19,15 @@ var reImportView = View.extend({
         this.type = '';
 
         restRequest({
-            url: `assetstore/${assetstoreId}/imports`,
-            data: { unique: false }
-        }).done((imports) => {
-            if (imports === undefined || imports.length === 0) {
+            url: `assetstore/import/${importId}`,
+            error: null
+        }).done((assetstoreImport) => {
+            if (!assetstoreImport) {
                 goBack(this.assetstoreId);
                 return;
             }
 
-            this.import = imports.filter((i) => i._id === this.importId)[0];
-            if (!this.import) {
-                goBack(this.assetstoreId);
-                return;
-            }
+            this.import = assetstoreImport;
 
             // collect assetstore type info and render
             const assetstore = new AssetstoreModel({ _id: assetstoreId });
@@ -38,6 +35,13 @@ var reImportView = View.extend({
                 this.type = assetstore.get('type') === 0 ? 'filesystem' : 's3';
                 this.render();
             }).fetch();
+        }).fail(() => {
+            events.trigger('g:alert', {
+                icon: 'cancel',
+                text: 'Unable to fetch base import information. Redirected to empty import page',
+                type: 'danger'
+            });
+            goBack(this.assetstoreId);
         });
     },
 
