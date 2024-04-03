@@ -80,9 +80,9 @@ table.g-imports-list-table
           span= _import.get('_assetstoreName')
         if anyImportPath
           td(data-id=_import.get('params').importPath, data-toggle='tooltip', title=_import.get('params').importPath)
-            span= (_import.get('params').importPath || '').replaceAll('/', '/\u00AD')
+            span= (_import.get('params').importPath || '').replaceAll(/(?!^)\//g, '/\u00AD')
         td(data-id=_import.get('params').destinationId, data-toggle='tooltip', title=_import.get('_destinationPath') + '\n' + _import.get('params').destinationId)
-          span= (_import.get('_destinationPath') || '').replaceAll('/', '/\u00AD')
+          span= (_import.get('_destinationPath') || '').replaceAll(/(?!^)\//g, '/\u00AD')
         if anyLeafed
           td
             span= _import.get('params').leafFoldersAsItems
