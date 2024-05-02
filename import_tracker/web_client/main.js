@@ -130,7 +130,7 @@ const importSubmit = (view, type) => {
     view.$('.g-validation-failed-message').empty();
     view.$(`.g-submit-${type}-import`).addClass('disabled');
 
-    let model = type === 'dwas' ? view.model : view.assetstore;
+    let model = view.assetstore;
     model = model.off().on('g:imported', function () {
         router.navigate(destinationType + '/' + destinationId, { trigger: true });
     }, view).on('g:error', function (err) {
@@ -138,11 +138,7 @@ const importSubmit = (view, type) => {
         view.$('.g-validation-failed-message').html(err.responseJSON.message);
     }, view);
 
-    if (type === 'dwas') {
-        model.dicomwebImport(importParams);
-    } else {
-        model.import(importParams);
-    }
+    model.import(importParams);
 };
 
 FilesystemImportView.prototype.events['submit .g-filesystem-import-form'] = function (e) {

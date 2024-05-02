@@ -13,8 +13,7 @@
         "name": "import_tracker",
         "main": "./main.js",
         "dependencies": [
-            "jobs",
-            "dicomweb"
+            "jobs"
         ]
     },
     "scripts": {
