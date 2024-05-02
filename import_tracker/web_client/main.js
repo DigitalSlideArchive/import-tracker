@@ -3,6 +3,7 @@ import $ from 'jquery';
 import AssetstoreView from '@girder/core/views/body/AssetstoresView';
 import FilesystemImportView from '@girder/core/views/body/FilesystemImportView';
 import S3ImportView from '@girder/core/views/body/S3ImportView';
+import DICOMwebImportView from '@girder/dicomweb/views/DICOMwebImportView';
 
 import CollectionModel from '@girder/core/models/CollectionModel';
 import FolderModel from '@girder/core/models/FolderModel';
@@ -54,12 +55,17 @@ wrap(S3ImportView, 'render', function (render) {
 
     this.$('.form-group').last().after(excludeExistingInput({ type: 's3' }));
 });
+wrap(DICOMwebImportView, 'render', function (render) {
+    render.call(this);
+
+    this.$('.form-group').last().after(excludeExistingInput({ type: 'dwas' }));
+});
 
 const setBrowserRoot = (view, type) => {
     const browserWidget = view._browserWidgetView;
-    const destType = view.$(`#g-${type}-import-dest-type`).val();
-    const destId = view.$(`#g-${type}-import-dest-id`).val();
-    const resourceId = destId.trim().split(/\s/)[0];
+    const destinationType = view.$(`#g-${type}-import-dest-type`).val();
+    const destinationId = view.$(`#g-${type}-import-dest-id`).val();
+    const resourceId = destinationId.trim().split(/\s/)[0];
 
     const models = {
         collection: CollectionModel,
@@ -67,8 +73,8 @@ const setBrowserRoot = (view, type) => {
         user: UserModel
     };
 
-    if (resourceId && destType in models) {
-        const model = new models[destType]({ _id: resourceId });
+    if (resourceId && destinationType in models) {
+        const model = new models[destinationType]({ _id: resourceId });
 
         model.once('g:fetched', () => {
             if (!browserWidget.root || browserWidget.root.id !== model.id) {
@@ -79,7 +85,7 @@ const setBrowserRoot = (view, type) => {
             if (err.status === 400) {
                 events.trigger('g:alert', {
                     icon: 'cancel',
-                    text: `No ${destType.toUpperCase()} with ID ${resourceId} found.`,
+                    text: `No ${destinationType.toUpperCase()} with ID ${resourceId} found.`,
                     type: 'danger',
                     timeout: 4000
                 });
@@ -97,52 +103,55 @@ wrap(S3ImportView, '_openBrowser', function (_openBrowser) {
     setBrowserRoot(this, 's3');
     _openBrowser.call(this);
 });
+wrap(DICOMwebImportView, '_openBrowser', function (_openBrowser) {
+    setBrowserRoot(this, 'dwas');
+    _openBrowser.call(this);
+});
 
 // We can't just wrap the submit events, as we need to modify what is passed to
 // the assetstore import method
+const importSubmit = (view, type) => {
+    const destinationId = view.$(`#g-${type}-import-dest-id`).val().trim().split(/\s/)[0];
+    const destinationType = view.$(`#g-${type}-import-dest-type`).val();
+    const excludeExisting = view.$(`#g-${type}-import-exclude-existing`).val();
+
+    const importParams = { destinationId, destinationType, excludeExisting, progress: true };
+
+    if (type === 'filesystem') {
+        importParams.leafFoldersAsItems = view.$(`#g-${type}-import-leaf-items`).val();
+    }
+    if (type === 'dwas') {
+        importParams.filters = view.$(`#g-${type}-import-filters`).val().trim();
+        importParams.limit = view.$(`#g-${type}-import-limit`).val().trim();
+    } else {
+        importParams.importPath = view.$(`#g-${type}-import-path`).val().trim();
+    }
+
+    view.$('.g-validation-failed-message').empty();
+    view.$(`.g-submit-${type}-import`).addClass('disabled');
+
+    let model = view.assetstore;
+    model = model.off().on('g:imported', function () {
+        router.navigate(destinationType + '/' + destinationId, { trigger: true });
+    }, view).on('g:error', function (err) {
+        view.$(`.g-submit-${type}-import`).removeClass('disabled');
+        view.$('.g-validation-failed-message').html(err.responseJSON.message);
+    }, view);
+
+    model.import(importParams);
+};
+
 FilesystemImportView.prototype.events['submit .g-filesystem-import-form'] = function (e) {
     e.preventDefault();
-
-    var destId = this.$('#g-filesystem-import-dest-id').val().trim().split(/\s/)[0],
-        destType = this.$('#g-filesystem-import-dest-type').val(),
-        foldersAsItems = this.$('#g-filesystem-import-leaf-items').val(),
-        excludeExisting = this.$('#g-filesystem-import-exclude-existing').val();
-
-    this.$('.g-validation-failed-message').empty();
-
-    this.assetstore.off('g:imported').on('g:imported', function () {
-        router.navigate(destType + '/' + destId, { trigger: true });
-    }, this).on('g:error', function (resp) {
-        this.$('.g-validation-failed-message').text(resp.responseJSON.message);
-    }, this).import({
-        importPath: this.$('#g-filesystem-import-path').val().trim(),
-        leafFoldersAsItems: foldersAsItems,
-        destinationId: destId,
-        destinationType: destType,
-        excludeExisting: excludeExisting,
-        progress: true
-    });
+    importSubmit(this, 'filesystem');
 };
 S3ImportView.prototype.events['submit .g-s3-import-form'] = function (e) {
     e.preventDefault();
-
-    var destId = this.$('#g-s3-import-dest-id').val().trim().split(/\s/)[0],
-        destType = this.$('#g-s3-import-dest-type').val(),
-        excludeExisting = this.$('#g-s3-import-exclude-existing').val();
-
-    this.$('.g-validation-failed-message').empty();
-
-    this.assetstore.off('g:imported').on('g:imported', function () {
-        router.navigate(destType + '/' + destId, { trigger: true });
-    }, this).on('g:error', function (resp) {
-        this.$('.g-validation-failed-message').text(resp.responseJSON.message);
-    }, this).import({
-        importPath: this.$('#g-s3-import-path').val().trim(),
-        destinationId: destId,
-        destinationType: destType,
-        excludeExisting: excludeExisting,
-        progress: true
-    });
+    importSubmit(this, 's3');
+};
+DICOMwebImportView.prototype.events['submit .g-dwas-import-form'] = function (e) {
+    e.preventDefault();
+    importSubmit(this, 'dwas');
 };
 
 // Setup router to assetstore imports view
