@@ -45,6 +45,8 @@ var reImportView = View.extend({
                     this.type = 's3';
                 } else if (assetstoreType === AssetstoreType.DICOMWEB) {
                     this.type = 'dwas';
+                } else if (assetstoreType === AssetstoreType.GIRDER) {
+                    this.type = 'gas';
                 } else {
                     goBack(this.assetstoreId, `Unsupported assetstore type '${assetstoreType}'`);
                 }
