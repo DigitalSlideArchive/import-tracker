@@ -5,7 +5,7 @@ import PaginateWidget from '@girder/core/views/widgets/PaginateWidget';
 import Collection from '@girder/core/collections/Collection';
 
 import AssetstoreModel from '@girder/core/models/AssetstoreModel';
-import { AssetstoreType, SORT_DESC } from '@girder/core/constants';
+import { SORT_DESC } from '@girder/core/constants';
 import View from '@girder/core/views/View';
 import router from '@girder/core/router';
 import { restRequest } from '@girder/core/rest';
@@ -34,11 +34,7 @@ var importList = View.extend({
             }, this);
 
             assetstore.once('g:fetched', () => {
-                if (assetstore.get('type') === AssetstoreType.DICOMWEB) {
-                    assetstore.dicomwebImport(importEvent.get('params'));
-                } else {
-                    assetstore.import(importEvent.get('params'));
-                }
+                assetstore.import(importEvent.get('params'));
             }).fetch();
         },
         'click .re-import-edit-btn': function (e) {
@@ -52,13 +48,7 @@ var importList = View.extend({
             const navigate = (assetstoreId, importId) => {
                 const assetstore = new AssetstoreModel({ _id: assetstoreId });
                 assetstore.once('g:fetched', () => {
-                    if (assetstore.get('type') === AssetstoreType.DICOMWEB) {
-                        // Avoid adding previous import data for DICOMweb imports by navigating to blank import
-                        // TODO: Add DICOMweb-specific re-import view
-                        router.navigate(`dicomweb_assetstore/${assetstoreId}/import`, { trigger: true });
-                    } else {
-                        router.navigate(`assetstore/${assetstoreId}/re-import/${importId}`, { trigger: true });
-                    }
+                    router.navigate(`assetstore/${assetstoreId}/re-import/${importId}`, { trigger: true });
                 }).fetch();
             };
 

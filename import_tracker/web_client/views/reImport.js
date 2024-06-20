@@ -1,11 +1,17 @@
 import AssetstoreModel from '@girder/core/models/AssetstoreModel';
 import View from '@girder/core/views/View';
+import { AssetstoreType } from '@girder/core/constants';
 
 import router from '@girder/core/router';
 import events from '@girder/core/events';
 import { restRequest } from '@girder/core/rest';
 
-const goBack = (assetstoreId) => {
+const goBack = (assetstoreId, message) => {
+    events.trigger('g:alert', {
+        icon: 'cancel',
+        text: `Could not re-import: ${message}`,
+        type: 'danger'
+    });
     router.navigate(
         `assetstore/${assetstoreId}/import`,
         { trigger: true, replace: true }
@@ -23,7 +29,7 @@ var reImportView = View.extend({
             error: null
         }).done((assetstoreImport) => {
             if (!assetstoreImport) {
-                goBack(this.assetstoreId);
+                goBack(this.assetstoreId, `Unable to find import ${importId}`);
                 return;
             }
 
@@ -32,16 +38,22 @@ var reImportView = View.extend({
             // collect assetstore type info and render
             const assetstore = new AssetstoreModel({ _id: assetstoreId });
             assetstore.once('g:fetched', () => {
-                this.type = assetstore.get('type') === 0 ? 'filesystem' : 's3';
+                const assetstoreType = assetstore.get('type');
+                if (assetstoreType === AssetstoreType.FILESYSTEM) {
+                    this.type = 'filesystem';
+                } else if (assetstoreType === AssetstoreType.S3) {
+                    this.type = 's3';
+                } else if (assetstoreType === AssetstoreType.DICOMWEB) {
+                    this.type = 'dwas';
+                } else if (assetstoreType === AssetstoreType.GIRDER) {
+                    this.type = 'gas';
+                } else {
+                    goBack(this.assetstoreId, `Unsupported assetstore type '${assetstoreType}'`);
+                }
                 this.render();
             }).fetch();
         }).fail(() => {
-            events.trigger('g:alert', {
-                icon: 'cancel',
-                text: 'Unable to fetch base import information. Redirected to empty import page',
-                type: 'danger'
-            });
-            goBack(this.assetstoreId);
+            goBack(this.assetstoreId, 'Unable to fetch base import information');
         });
     },
 
@@ -56,6 +68,11 @@ var reImportView = View.extend({
         this.$(`#g-${this.type}-import-dest-id`).val(destId);
         this.$(`#g-${this.type}-import-leaf-items`).val(params.leafFoldersAsItems);
         this.$(`#g-${this.type}-import-exclude-existing`).val(excludeExisting);
+
+        if (this.type === 'dwas') {
+            this.$(`#g-${this.type}-import-filters`).val(params.filters);
+            this.$(`#g-${this.type}-import-limit`).val(params.limit);
+        }
 
         restRequest({
             url: `resource/${destId}/path`,
