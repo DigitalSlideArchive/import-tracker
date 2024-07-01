@@ -96,7 +96,7 @@ def moveFile(file, folder, user, assetstore, progress, job):
     return Upload().moveFileToAssetstore(file, user, assetstore, progress=progress)
 
 
-def moveLeafFiles(folder, user, assetstore, progress, job):
+def moveLeafFiles(folder, user, assetstore, ignoreImported, progress, job):
     # check if the move has been canceled
     job = Job().load(job['_id'], force=True)
     if job['status'] == JobStatus.CANCELED:
@@ -105,7 +105,11 @@ def moveLeafFiles(folder, user, assetstore, progress, job):
     Folder().updateFolder(folder)
 
     # only move files that are not already in the assetstore
-    unique_clause = {'assetstoreId': {'$ne': ObjectId(assetstore['_id'])}}
+    query = {'assetstoreId': {'$ne': ObjectId(assetstore['_id'])}}
+
+    # ignore imported files if desired
+    if ignoreImported:
+        query['imported'] = {'$ne': True}
 
     folder_item = Item().findOne({
         'folderId': folder['_id'],
@@ -114,12 +118,12 @@ def moveLeafFiles(folder, user, assetstore, progress, job):
         raise RestException('Folder %s has no item' % folder['_id'])
 
     child_folders = Folder().childFolders(folder, 'folder', user=user)
-    child_items = Folder().childItems(folder, filters=unique_clause)
+    child_items = Folder().childItems(folder, filters=query)
 
     # get all files attached to an object
     def getAttached(attachedToId):
         uploads = []
-        for attached_file in File().find({'attachedToId': attachedToId, **unique_clause}):
+        for attached_file in File().find({'attachedToId': attachedToId, **query}):
             upload = moveFile(attached_file, folder, user, assetstore, progress, job)
             uploads.append(upload)
         return uploads
@@ -131,12 +135,13 @@ def moveLeafFiles(folder, user, assetstore, progress, job):
         # upload all attached files for each item
         uploads += getAttached(item['_id'])
 
-        for file in File().find({'itemId': ObjectId(item['_id']), **unique_clause}):
+        for file in File().find({'itemId': ObjectId(item['_id']), **query}):
             upload = moveFile(file, folder, user, assetstore, progress, job)
             uploads.append(upload)
 
     for child_folder in child_folders:
-        uploads += moveLeafFiles(child_folder, user, assetstore, progress, job)
+        uploads += moveLeafFiles(child_folder, user, assetstore,
+                                 ignoreImported, progress, job)
 
     return uploads
 
@@ -186,17 +191,21 @@ def getImport(self, assetstoreImport):
     Description('Move folder contents to an assetstore.')
     .modelParam('id', 'Source folder ID', model=Folder, level=AccessType.WRITE)
     .modelParam('assetstoreId', 'Destination assetstore ID', model=Assetstore, paramType='formData')
+    .param('ignoreImported', 'Ignore files that have been directly imported', dataType='boolean',
+           default=True, required=True)
     .param('progress', 'Whether to record progress on the move.', dataType='boolean', default=False,
            required=False)
 )
-def moveFolder(self, folder, assetstore, progress):
+def moveFolder(self, folder, assetstore, ignoreImported, progress):
     user = self.getCurrentUser()
     job = Job().createJob(
-        title='Move folder "%s" to assetstore "%s"' % (folder['name'], assetstore['name']),
+        title='Move folder "%s" to assetstore "%s"' % (
+            folder['name'], assetstore['name']),
         type='folder_move', public=False, user=user,
     )
     job = Job().updateJob(job, '%s - Starting folder move "%s" to assetstore "%s" (%s)\n' % (
-        time.strftime('%Y-%m-%d %H:%M:%S'), folder['name'], assetstore['name'], assetstore['_id']
+        time.strftime(
+            '%Y-%m-%d %H:%M:%S'), folder['name'], assetstore['name'], assetstore['_id']
     ), status=JobStatus.RUNNING)
 
     result = None
@@ -208,7 +217,8 @@ def moveFolder(self, folder, assetstore, progress):
                                  assetstore['name'],
                                  assetstore['_id'])) as ctx:
             try:
-                result = moveLeafFiles(folder, user, assetstore, ctx, job)
+                result = moveLeafFiles(
+                    folder, user, assetstore, ignoreImported, ctx, job)
 
                 Job().updateJob(job, '%s - Finished folder move.\n' % (
                     time.strftime('%Y-%m-%d %H:%M:%S'),
