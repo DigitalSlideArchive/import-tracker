@@ -1,23 +1,14 @@
-# -*- coding: utf-8 -*-
-import time
-
 from bson.objectid import ObjectId
 from girder.api import access
 from girder.api.describe import Description, autoDescribeRoute
 from girder.api.rest import boundHandler
 from girder.constants import AccessType, SortDir
-from girder.exceptions import RestException
 from girder.models.assetstore import Assetstore
-from girder.models.file import File
 from girder.models.folder import Folder
-from girder.models.item import Item
-from girder.models.upload import Upload
 from girder.utility import model_importer, path
-from girder.utility.progress import ProgressContext, setResponseTimeLimit
-from girder_jobs.constants import JobStatus
-from girder_jobs.models.job import Job
 
-from .models import AssetstoreImport, ImportTrackerCancelError
+from . import utils
+from .models import AssetstoreImport
 
 
 def processCursor(cursor, user):
@@ -82,70 +73,6 @@ def getImports(query=None, user=None, unique=False, limit=None, offset=None, sor
     return processCursor(cursor, user)
 
 
-def moveFile(file, folder, user, assetstore, progress, job):
-    # check if the move has been canceled
-    job = Job().load(job['_id'], force=True)
-    if job['status'] == JobStatus.CANCELED:
-        raise ImportTrackerCancelError()
-
-    message = f'Moving {folder["name"]}/{file["name"]}\n'
-    job = Job().updateJob(job, log=f'{time.strftime("%Y-%m-%d %H:%M:%S")} - {message}')
-    progress.update(message=message)
-
-    setResponseTimeLimit(86400)
-    return Upload().moveFileToAssetstore(file, user, assetstore, progress=progress)
-
-
-def moveLeafFiles(folder, user, assetstore, ignoreImported, progress, job):
-    # check if the move has been canceled
-    job = Job().load(job['_id'], force=True)
-    if job['status'] == JobStatus.CANCELED:
-        raise ImportTrackerCancelError()
-
-    Folder().updateFolder(folder)
-
-    # only move files that are not already in the assetstore
-    query = {'assetstoreId': {'$ne': ObjectId(assetstore['_id'])}}
-
-    # ignore imported files if desired
-    if ignoreImported:
-        query['imported'] = {'$ne': True}
-
-    folder_item = Item().findOne({
-        'folderId': folder['_id'],
-    })
-    if not folder_item:
-        raise RestException('Folder %s has no item' % folder['_id'])
-
-    child_folders = Folder().childFolders(folder, 'folder', user=user)
-    child_items = Folder().childItems(folder, filters=query)
-
-    # get all files attached to an object
-    def getAttached(attachedToId):
-        uploads = []
-        for attached_file in File().find({'attachedToId': attachedToId, **query}):
-            upload = moveFile(attached_file, folder, user, assetstore, progress, job)
-            uploads.append(upload)
-        return uploads
-
-    # upload all files attached to the current folder
-    uploads = getAttached(folder_item['_id'])
-
-    for item in child_items:
-        # upload all attached files for each item
-        uploads += getAttached(item['_id'])
-
-        for file in File().find({'itemId': ObjectId(item['_id']), **query}):
-            upload = moveFile(file, folder, user, assetstore, progress, job)
-            uploads.append(upload)
-
-    for child_folder in child_folders:
-        uploads += moveLeafFiles(child_folder, user, assetstore,
-                                 ignoreImported, progress, job)
-
-    return uploads
-
-
 @access.admin
 @boundHandler
 @autoDescribeRoute(
@@ -198,39 +125,4 @@ def getImport(self, assetstoreImport):
 )
 def moveFolder(self, folder, assetstore, ignoreImported, progress):
     user = self.getCurrentUser()
-    job = Job().createJob(
-        title='Move folder "%s" to assetstore "%s"' % (
-            folder['name'], assetstore['name']),
-        type='folder_move', public=False, user=user,
-    )
-    job = Job().updateJob(job, '%s - Starting folder move "%s" to assetstore "%s" (%s)\n' % (
-        time.strftime(
-            '%Y-%m-%d %H:%M:%S'), folder['name'], assetstore['name'], assetstore['_id']
-    ), status=JobStatus.RUNNING)
-
-    result = None
-    try:
-        with ProgressContext(progress, user=user,
-                             title='Moving folder "%s" (%s) to assetstore "%s" (%s)' % (
-                                 folder['name'],
-                                 folder['_id'],
-                                 assetstore['name'],
-                                 assetstore['_id'])) as ctx:
-            try:
-                result = moveLeafFiles(
-                    folder, user, assetstore, ignoreImported, ctx, job)
-
-                Job().updateJob(job, '%s - Finished folder move.\n' % (
-                    time.strftime('%Y-%m-%d %H:%M:%S'),
-                ), status=JobStatus.SUCCESS)
-
-            except ImportTrackerCancelError:
-                return 'Job canceled'
-
-    except Exception as exc:
-        Job().updateJob(job, '%s - Failed with %s\n' % (
-            time.strftime('%Y-%m-%d %H:%M:%S'),
-            exc,
-        ), status=JobStatus.ERROR)
-
-    return result
+    return utils.moveFolder(user, folder, assetstore, ignoreImported, progress)
