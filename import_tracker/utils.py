@@ -1,10 +1,8 @@
 import time
 
 from bson.objectid import ObjectId
-from girder.exceptions import RestException
 from girder.models.file import File
 from girder.models.folder import Folder
-from girder.models.item import Item
 from girder.models.upload import Upload
 from girder.utility.progress import ProgressContext, setResponseTimeLimit
 from girder_jobs.constants import JobStatus
