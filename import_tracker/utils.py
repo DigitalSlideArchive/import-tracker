@@ -91,22 +91,31 @@ def _moveLeafFiles(folder, user, assetstore, ignoreImported, progress, job):
     child_folders = Folder().childFolders(folder, 'folder', user=user)
     child_items = Folder().childItems(folder, filters=query)
 
-    # get all files attached to an object
-    def getAttached(attachedToId):
-        uploads = []
-        for attached_file in File().find({'attachedToId': attachedToId, **query}):
-            upload = moveFile(attached_file, folder, user, assetstore, progress, job)
-            uploads.append(upload)
-        return uploads
+    uploads = []
 
-    uploads = getAttached(folder['_id'])
-    for item in child_items:
-        # upload all attached files for each item
-        uploads += getAttached(item['_id'])
-
-        for file in File().find({'itemId': ObjectId(item['_id']), **query}):
+    def tryToMoveFile(file):
+        try:
             upload = moveFile(file, folder, user, assetstore, progress, job)
             uploads.append(upload)
+        except Exception as e:
+            # Ignore failed move of files
+            Job().updateJob(
+                job,
+                log=f'{time.strftime("%Y-%m-%d %H:%M:%S")} - Failed to move {file["name"]}: {e}\n'
+            )
+
+    # get all files attached to an object
+    def moveAttachedFiles(attachedToId):
+        for attached_file in File().find({'attachedToId': attachedToId, **query}):
+            tryToMoveFile(attached_file)
+
+    moveAttachedFiles(folder['_id'])
+    for item in child_items:
+        # upload all attached files for each item
+        moveAttachedFiles(item['_id'])
+
+        for file in File().find({'itemId': ObjectId(item['_id']), **query}):
+            tryToMoveFile(file)
 
     for child_folder in child_folders:
         uploads += _moveLeafFiles(child_folder, user, assetstore,
