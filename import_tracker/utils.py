@@ -90,12 +90,6 @@ def _moveLeafFiles(folder, user, assetstore, ignoreImported, progress, job):
     if ignoreImported:
         query['imported'] = {'$ne': True}
 
-    folder_item = Item().findOne({
-        'folderId': folder['_id'],
-    })
-    if not folder_item:
-        raise RestException('Folder %s has no item' % folder['_id'])
-
     child_folders = Folder().childFolders(folder, 'folder', user=user)
     child_items = Folder().childItems(folder, filters=query)
 
@@ -107,9 +101,7 @@ def _moveLeafFiles(folder, user, assetstore, ignoreImported, progress, job):
             uploads.append(upload)
         return uploads
 
-    # upload all files attached to the current folder
-    uploads = getAttached(folder_item['_id'])
-
+    uploads = getAttached(folder['_id'])
     for item in child_items:
         # upload all attached files for each item
         uploads += getAttached(item['_id'])
