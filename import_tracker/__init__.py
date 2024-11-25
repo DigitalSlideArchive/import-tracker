@@ -122,20 +122,23 @@ def wrapShouldImportFile():
 
     def shouldImportFileWrapper(self, path, params):
         jobRec = params.get('_job')
-        job = Job().load(jobRec['id'], force=True, includeLog=False)
-        if job['status'] == JobStatus.CANCELED:
-            raise ImportTrackerCancelError()
-        if time.time() - jobRec['lastlog'] > 10:
-            Job().updateJob(
-                job,
-                log='%s - Checked %d, skipped %d; checking %s\n' % (
-                    time.strftime('%Y-%m-%d %H:%M:%S'),
-                    jobRec['count'], jobRec['skip'], path),
-                overwrite=(jobRec['logcount'] > 1000))
-            if jobRec['logcount'] > 1000:
-                jobRec['logcount'] = 0
-            jobRec['logcount'] += 1
-            jobRec['lastlog'] = time.time()
+        job = None
+        if jobRec:
+            job = Job().load(jobRec['id'], force=True, includeLog=False)
+        if job:
+            if job['status'] == JobStatus.CANCELED:
+                raise ImportTrackerCancelError()
+            if time.time() - jobRec['lastlog'] > 10:
+                Job().updateJob(
+                    job,
+                    log='%s - Checked %d, skipped %d; checking %s\n' % (
+                        time.strftime('%Y-%m-%d %H:%M:%S'),
+                        jobRec['count'], jobRec['skip'], path),
+                    overwrite=(jobRec['logcount'] > 1000))
+                if jobRec['logcount'] > 1000:
+                    jobRec['logcount'] = 0
+                jobRec['logcount'] += 1
+                jobRec['lastlog'] = time.time()
         result = True
         if params.get('excludeExisting'):
             idx1 = ([('assetstoreId', 1), ('path', 1)], {})
@@ -152,10 +155,11 @@ def wrapShouldImportFile():
                 result = False
         if result:
             result = baseShouldImportFile(self, path, params)
-        if not result:
-            jobRec['skip'] += 1
-        else:
-            jobRec['count'] += 1
+        if jobRec:
+            if not result:
+                jobRec['skip'] += 1
+            else:
+                jobRec['count'] += 1
         return result
 
     AbstractAssetstoreAdapter.shouldImportFile = shouldImportFileWrapper
