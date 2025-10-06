@@ -3,9 +3,9 @@ version: 2.1
 jobs:
   test:
     docker:
-      - image: girder/girder_test:latest
-      - image: circleci/mongo:4.0-ram
-        command: ["mongod", "--storageEngine", "ephemeralForTest", "--dbpath", "/dev/shm/mongo"]
+      - image: girder/girder_test:py39-node14
+      - image: mongo:4.4
+        command: bash -c "mkdir /dev/shm/mongo && mongod --nojournal --dbpath=/dev/shm/mongo --noauth --bind_ip_all"
 
     steps:
       - checkout

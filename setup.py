@@ -37,7 +37,6 @@ setup(
     license='Apache 2.0',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
-        'License :: OSI Approved :: Apache Software License',
         'Natural Language :: English',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.8',
@@ -54,5 +53,6 @@ setup(
     keywords='girder-plugin, import_tracker',
     packages=find_packages(exclude=['test', 'test.*']),
     zip_safe=False,
+    python_requires='>=3.9',
     entry_points={'girder.plugin': ['import_tracker = import_tracker:GirderPlugin']},
 )
